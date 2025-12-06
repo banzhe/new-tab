@@ -1,5 +1,5 @@
 import { useRequest } from "ahooks"
-import { Plus, Settings, Trash2 } from "lucide-react"
+import { Settings } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,21 +12,13 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer"
 import {
-  Field,
-  FieldContent,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
-import {
   type Bookmark,
   type ConfigResponse,
   MessageType,
   type SaveConfigMessage,
 } from "@/types/messages"
+import { BookmarkSettings } from "./BookmarkSettings"
+import { YesCodeSettings } from "./YesCodeSettings"
 
 export function SettingsDrawer() {
   const [open, setOpen] = useState(false)
@@ -79,26 +71,6 @@ export function SettingsDrawer() {
     },
   )
 
-  // 书签管理函数
-  const addBookmark = () => {
-    const newBookmark: Bookmark = {
-      id: crypto.randomUUID(),
-      title: "",
-      url: "",
-    }
-    setBookmarks([...bookmarks, newBookmark])
-  }
-
-  const updateBookmark = (id: string, field: keyof Bookmark, value: string) => {
-    setBookmarks(
-      bookmarks.map((b) => (b.id === id ? { ...b, [field]: value } : b)),
-    )
-  }
-
-  const removeBookmark = (id: string) => {
-    setBookmarks(bookmarks.filter((b) => b.id !== id))
-  }
-
   const handleCancel = () => {
     // Reload settings from background script
     reloadConfig()
@@ -126,81 +98,19 @@ export function SettingsDrawer() {
 
         {/* Scrollable content area */}
         <div className="flex-1 space-y-6 overflow-y-auto p-4">
-          <FieldSet>
-            <FieldLegend>YesCode</FieldLegend>
-            <FieldGroup>
-              <Field orientation="horizontal">
-                <FieldContent>
-                  <FieldLabel htmlFor="showBalance">开启</FieldLabel>
-                </FieldContent>
-                <Switch
-                  id="showBalance"
-                  checked={showBalance}
-                  onCheckedChange={setShowBalance}
-                />
-              </Field>
-              <Field orientation="horizontal">
-                <FieldContent>
-                  <FieldLabel htmlFor="apiKey">API Key</FieldLabel>
-                </FieldContent>
-                <Input
-                  id="apiKey"
-                  type="password"
-                  value={yesCodeApiKey}
-                  onChange={(e) => setYesCodeApiKey(e.target.value)}
-                  placeholder="输入 API Key"
-                  className="w-64"
-                />
-              </Field>
-            </FieldGroup>
-          </FieldSet>
+          <YesCodeSettings
+            apiKey={yesCodeApiKey}
+            onApiKeyChange={setYesCodeApiKey}
+            showBalance={showBalance}
+            onShowBalanceChange={setShowBalance}
+          />
 
-          {/* 书签管理 */}
-          <FieldSet>
-            <FieldLegend>快捷书签</FieldLegend>
-            <FieldGroup>
-              {bookmarks.map((bookmark) => (
-                <div key={bookmark.id} className="flex items-center gap-2">
-                  <Input
-                    value={bookmark.title}
-                    onChange={(e) =>
-                      updateBookmark(bookmark.id, "title", e.target.value)
-                    }
-                    placeholder="标题"
-                    className="w-24"
-                  />
-                  <Input
-                    value={bookmark.url}
-                    onChange={(e) =>
-                      updateBookmark(bookmark.id, "url", e.target.value)
-                    }
-                    placeholder="网址 (https://...)"
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeBookmark(bookmark.id)}
-                    aria-label="删除书签"
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addBookmark}
-                className="w-full"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                添加书签
-              </Button>
-            </FieldGroup>
-          </FieldSet>
+          <BookmarkSettings
+            bookmarks={bookmarks}
+            onBookmarksChange={setBookmarks}
+          />
         </div>
+
         {/* Footer with actions */}
         <DrawerFooter className="border-t">
           <Button className="w-full" onClick={saveConfig} disabled={saving}>
