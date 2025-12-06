@@ -1,5 +1,5 @@
 import { useRequest } from "ahooks"
-import { Settings } from "lucide-react"
+import { Plus, Settings, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import {
+  type Bookmark,
   type ConfigResponse,
   MessageType,
   type SaveConfigMessage,
@@ -31,6 +32,7 @@ export function SettingsDrawer() {
   const [open, setOpen] = useState(false)
   const [yesCodeApiKey, setYesCodeApiKey] = useState("")
   const [showBalance, setShowBalance] = useState(true)
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
 
   // Load config using useRequest
   const { refresh: reloadConfig } = useRequest(
@@ -41,6 +43,7 @@ export function SettingsDrawer() {
       if (response.success && response.data) {
         setYesCodeApiKey(response.data.apiKey)
         setShowBalance(response.data.showBalance)
+        setBookmarks(response.data.bookmarks || [])
       }
       return response
     },
@@ -56,7 +59,7 @@ export function SettingsDrawer() {
     async () => {
       const response = await browser.runtime.sendMessage<SaveConfigMessage>({
         type: MessageType.SAVE_CONFIG,
-        payload: { apiKey: yesCodeApiKey, showBalance },
+        payload: { apiKey: yesCodeApiKey, showBalance, bookmarks },
       })
 
       if (response.success) {
@@ -75,6 +78,26 @@ export function SettingsDrawer() {
       },
     },
   )
+
+  // 书签管理函数
+  const addBookmark = () => {
+    const newBookmark: Bookmark = {
+      id: crypto.randomUUID(),
+      title: "",
+      url: "",
+    }
+    setBookmarks([...bookmarks, newBookmark])
+  }
+
+  const updateBookmark = (id: string, field: keyof Bookmark, value: string) => {
+    setBookmarks(
+      bookmarks.map((b) => (b.id === id ? { ...b, [field]: value } : b)),
+    )
+  }
+
+  const removeBookmark = (id: string) => {
+    setBookmarks(bookmarks.filter((b) => b.id !== id))
+  }
 
   const handleCancel = () => {
     // Reload settings from background script
@@ -102,7 +125,7 @@ export function SettingsDrawer() {
         </DrawerHeader>
 
         {/* Scrollable content area */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 space-y-6 overflow-y-auto p-4">
           <FieldSet>
             <FieldLegend>YesCode</FieldLegend>
             <FieldGroup>
@@ -129,6 +152,52 @@ export function SettingsDrawer() {
                   className="w-64"
                 />
               </Field>
+            </FieldGroup>
+          </FieldSet>
+
+          {/* 书签管理 */}
+          <FieldSet>
+            <FieldLegend>快捷书签</FieldLegend>
+            <FieldGroup>
+              {bookmarks.map((bookmark) => (
+                <div key={bookmark.id} className="flex items-center gap-2">
+                  <Input
+                    value={bookmark.title}
+                    onChange={(e) =>
+                      updateBookmark(bookmark.id, "title", e.target.value)
+                    }
+                    placeholder="标题"
+                    className="w-24"
+                  />
+                  <Input
+                    value={bookmark.url}
+                    onChange={(e) =>
+                      updateBookmark(bookmark.id, "url", e.target.value)
+                    }
+                    placeholder="网址 (https://...)"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeBookmark(bookmark.id)}
+                    aria-label="删除书签"
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addBookmark}
+                className="w-full"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                添加书签
+              </Button>
             </FieldGroup>
           </FieldSet>
         </div>

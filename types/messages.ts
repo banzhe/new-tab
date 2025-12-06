@@ -1,7 +1,15 @@
+// ========== 书签类型 ==========
+export interface Bookmark {
+  id: string
+  title: string
+  url: string
+}
+
 // ========== 存储配置类型 ==========
 export interface YesCodeConfig {
   apiKey: string
   showBalance: boolean
+  bookmarks: Bookmark[]
 }
 
 // ========== 余额数据类型 ==========
