@@ -4,9 +4,7 @@
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": [
-        "./*"
-      ] // or "./src/*" if using src directory
+      "@/*": ["./*"] // or "./src/*" if using src directory
     }
   }
 }
