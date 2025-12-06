@@ -66,15 +66,20 @@ function App() {
           <SearchBar placeholder="搜索 Google..." />
         </div>
 
-        <div className="w-full overflow-auto flex flex-col items-center h-128 gap-8 no-scroll">
-          {/* 快捷书签 */}
-          <BookmarkGrid bookmarks={bookmarks} className="w-full max-w-2xl" />
+        <div className="w-full flex justify-center">
+          <div className="w-2xl overflow-auto grid grid-cols-2 max-h-128 gap-8 no-scroll">
+            {/* 快捷书签 */}
+            <BookmarkGrid
+              bookmarks={bookmarks}
+              className="w-full max-w-2xl col-span-2 overflow-auto"
+            />
 
-          {/* YesCode 余额统计 */}
-          {showBalance && <YesCodeBalance />}
+            {/* YesCode 余额统计 */}
+            {showBalance && <YesCodeBalance />}
 
-          {/* Cursor 每月用量 */}
-          {showCursorUsage && <CursorUsage />}
+            {/* Cursor 每月用量 */}
+            {showCursorUsage && <CursorUsage />}
+          </div>
         </div>
       </div>
     </div>

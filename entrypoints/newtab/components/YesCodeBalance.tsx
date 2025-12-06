@@ -1,14 +1,15 @@
 import { useRequest } from "ahooks"
 import { useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import {
   type BalanceResponse,
   type ConfigUpdatedMessage,
   MessageType,
 } from "@/types/messages"
+import { SmallCard } from "./SmallCard"
 
 export function YesCodeBalance() {
+  const cardTitle = "YesCode 余额统计"
   // Fetch balance using useRequest
   const {
     data: balanceData,
@@ -51,31 +52,21 @@ export function YesCodeBalance() {
 
   if (loading) {
     return (
-      <Card className="w-full max-w-2xl">
-        <CardHeader>
-          <CardTitle>YesCode 余额统计</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center h-64">
-            <p className="text-muted-foreground">加载中...</p>
-          </div>
-        </CardContent>
-      </Card>
+      <SmallCard title={cardTitle}>
+        <div className="flex items-center justify-center h-full">
+          <p className="text-muted-foreground">加载中...</p>
+        </div>
+      </SmallCard>
     )
   }
 
   if (error) {
     return (
-      <Card className="w-full max-w-2xl">
-        <CardHeader>
-          <CardTitle>YesCode 余额统计</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center h-64">
-            <p className="text-destructive">{error.message}</p>
-          </div>
-        </CardContent>
-      </Card>
+      <SmallCard title={cardTitle}>
+        <div className="flex items-center justify-center h-full">
+          <p className="text-destructive">{error.message}</p>
+        </div>
+      </SmallCard>
     )
   }
 
@@ -87,38 +78,33 @@ export function YesCodeBalance() {
     (balanceData.weekly_spent_balance / balanceData.weekly_limit) * 100
 
   return (
-    <Card className="w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle>YesCode 余额统计</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Subscription Balance */}
-        <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">订阅余额</p>
-          <p className="text-3xl font-bold">
-            ${balanceData.subscription_balance.toFixed(2)}
+    <SmallCard title={cardTitle}>
+      {/* Subscription Balance */}
+      <div className="space-y-1">
+        <p className="text-sm text-muted-foreground">订阅余额</p>
+        <p className="text-3xl font-bold">
+          ${balanceData.subscription_balance.toFixed(2)}
+        </p>
+      </div>
+
+      {/* Weekly Usage Progress */}
+      <div className="space-y-2">
+        <div className="flex justify-between items-center">
+          <h3 className="text-sm font-medium">本周使用情况</h3>
+          <p className="text-sm text-muted-foreground">
+            {weeklyUsagePercent.toFixed(1)}%
           </p>
         </div>
-
-        {/* Weekly Usage Progress */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <h3 className="text-sm font-medium">本周使用情况</h3>
-            <p className="text-sm text-muted-foreground">
-              {weeklyUsagePercent.toFixed(1)}%
-            </p>
-          </div>
-          <Progress value={weeklyUsagePercent} className="h-2" />
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">
-              已使用: ${balanceData.weekly_spent_balance.toFixed(2)}
-            </span>
-            <span className="text-muted-foreground">
-              限额: ${balanceData.weekly_limit.toFixed(2)}
-            </span>
-          </div>
+        <Progress value={weeklyUsagePercent} className="h-2" />
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">
+            已使用: ${balanceData.weekly_spent_balance.toFixed(2)}
+          </span>
+          <span className="text-muted-foreground">
+            限额: ${balanceData.weekly_limit.toFixed(2)}
+          </span>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </SmallCard>
   )
 }
