@@ -18,12 +18,14 @@ import {
   type SaveConfigMessage,
 } from "@/types/messages"
 import { BookmarkSettings } from "./BookmarkSettings"
+import { CursorSettings } from "./CursorSettings"
 import { YesCodeSettings } from "./YesCodeSettings"
 
 export function SettingsDrawer() {
   const [open, setOpen] = useState(false)
   const [yesCodeApiKey, setYesCodeApiKey] = useState("")
   const [showBalance, setShowBalance] = useState(true)
+  const [showCursorUsage, setShowCursorUsage] = useState(true)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
 
   // Load config using useRequest
@@ -35,6 +37,7 @@ export function SettingsDrawer() {
       if (response.success && response.data) {
         setYesCodeApiKey(response.data.apiKey)
         setShowBalance(response.data.showBalance)
+        setShowCursorUsage(response.data.showCursorUsage)
         setBookmarks(response.data.bookmarks || [])
       }
       return response
@@ -51,7 +54,12 @@ export function SettingsDrawer() {
     async () => {
       const response = await browser.runtime.sendMessage<SaveConfigMessage>({
         type: MessageType.SAVE_CONFIG,
-        payload: { apiKey: yesCodeApiKey, showBalance, bookmarks },
+        payload: {
+          apiKey: yesCodeApiKey,
+          showBalance,
+          showCursorUsage,
+          bookmarks,
+        },
       })
 
       if (response.success) {
@@ -103,6 +111,11 @@ export function SettingsDrawer() {
             onApiKeyChange={setYesCodeApiKey}
             showBalance={showBalance}
             onShowBalanceChange={setShowBalance}
+          />
+
+          <CursorSettings
+            showCursorUsage={showCursorUsage}
+            onShowCursorUsageChange={setShowCursorUsage}
           />
 
           <BookmarkSettings

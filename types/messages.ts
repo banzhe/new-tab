@@ -9,6 +9,7 @@ export interface Bookmark {
 export interface YesCodeConfig {
   apiKey: string
   showBalance: boolean
+  showCursorUsage: boolean
   bookmarks: Bookmark[]
 }
 
@@ -22,6 +23,25 @@ export interface YesCodeBalanceData {
   weekly_spent_balance: number
 }
 
+// ========== Cursor 用量数据类型 ==========
+export interface CursorUsageAggregation {
+  modelIntent: string
+  inputTokens?: string
+  outputTokens?: string
+  cacheWriteTokens?: string
+  cacheReadTokens?: string
+  totalCents?: number
+}
+
+export interface CursorUsageData {
+  aggregations: CursorUsageAggregation[]
+  totalInputTokens: string
+  totalOutputTokens: string
+  totalCacheWriteTokens: string
+  totalCacheReadTokens: string
+  totalCostCents: number
+}
+
 // ========== 消息类型枚举 ==========
 export enum MessageType {
   // 配置相关
@@ -31,6 +51,9 @@ export enum MessageType {
 
   // 余额相关
   FETCH_BALANCE = "FETCH_BALANCE",
+
+  // Cursor 用量相关
+  FETCH_CURSOR_USAGE = "FETCH_CURSOR_USAGE",
 }
 
 // ========== 消息结构定义 ==========
@@ -52,6 +75,10 @@ export interface FetchBalanceMessage extends BaseMessage {
   type: MessageType.FETCH_BALANCE
 }
 
+export interface FetchCursorUsageMessage extends BaseMessage {
+  type: MessageType.FETCH_CURSOR_USAGE
+}
+
 export interface ConfigUpdatedMessage extends BaseMessage {
   type: MessageType.CONFIG_UPDATED
 }
@@ -65,10 +92,12 @@ export interface MessageResponse<T = unknown> {
 
 export type ConfigResponse = MessageResponse<YesCodeConfig>
 export type BalanceResponse = MessageResponse<YesCodeBalanceData>
+export type CursorUsageResponse = MessageResponse<CursorUsageData>
 
 // 联合类型
 export type ExtensionMessage =
   | GetConfigMessage
   | SaveConfigMessage
   | FetchBalanceMessage
+  | FetchCursorUsageMessage
   | ConfigUpdatedMessage

@@ -1,4 +1,4 @@
-import { fetchYesCodeBalance } from "@/lib/api"
+import { fetchCursorUsage, fetchYesCodeBalance } from "@/lib/api"
 import { getConfig, saveConfig } from "@/lib/storage"
 import {
   type ExtensionMessage,
@@ -63,6 +63,28 @@ export default defineBackground(() => {
 
           const balanceData = await fetchYesCodeBalance(config.apiKey)
           return { success: true, data: balanceData }
+        }
+
+        case MessageType.FETCH_CURSOR_USAGE: {
+          // 获取 cursor.com 的认证 cookie
+          const cookies = await browser.cookies.getAll({
+            domain: "cursor.com",
+          })
+
+          if (!cookies || cookies.length === 0) {
+            return {
+              success: false,
+              error: "请先在浏览器中登录 cursor.com",
+            }
+          }
+
+          // 将所有 cookie 拼接成字符串
+          const cookieString = cookies
+            .map((c) => `${c.name}=${c.value}`)
+            .join("; ")
+
+          const usageData = await fetchCursorUsage(cookieString)
+          return { success: true, data: usageData }
         }
 
         default: {

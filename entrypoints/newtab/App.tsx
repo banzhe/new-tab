@@ -6,12 +6,14 @@ import {
   MessageType,
 } from "@/types/messages"
 import { BookmarkGrid } from "./components/BookmarkGrid"
+import { CursorUsage } from "./components/CursorUsage"
 import { SearchBar } from "./components/SearchBar"
 import { SettingsDrawer } from "./components/SettingsDrawer"
 import { YesCodeBalance } from "./components/YesCodeBalance"
 
 function App() {
   const [showBalance, setShowBalance] = useState(true)
+  const [showCursorUsage, setShowCursorUsage] = useState(true)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
 
   useEffect(() => {
@@ -21,6 +23,7 @@ function App() {
       .then((response: ConfigResponse) => {
         if (response.success && response.data) {
           setShowBalance(response.data.showBalance)
+          setShowCursorUsage(response.data.showCursorUsage)
           setBookmarks(response.data.bookmarks || [])
         }
       })
@@ -36,6 +39,7 @@ function App() {
           .then((response: ConfigResponse) => {
             if (response.success && response.data) {
               setShowBalance(response.data.showBalance)
+              setShowCursorUsage(response.data.showCursorUsage)
               setBookmarks(response.data.bookmarks || [])
             }
           })
@@ -53,17 +57,26 @@ function App() {
   }, [])
 
   return (
-    <div className="flex h-dvh w-dvw flex-col items-center justify-center gap-8">
+    <div className="h-dvh w-dvw">
       <SettingsDrawer />
 
-      {/* 搜索栏 */}
-      <SearchBar placeholder="搜索 Google..." />
+      <div className="absolute top-[40%] left-0 w-full flex flex-col items-center justify-center gap-8">
+        {/* 搜索栏 */}
+        <div className="w-full max-w-2xl">
+          <SearchBar placeholder="搜索 Google..." />
+        </div>
 
-      {/* 快捷书签 */}
-      <BookmarkGrid bookmarks={bookmarks} className="w-full max-w-2xl px-4" />
+        <div className="w-full overflow-auto flex flex-col items-center h-128 gap-8 no-scroll">
+          {/* 快捷书签 */}
+          <BookmarkGrid bookmarks={bookmarks} className="w-full max-w-2xl" />
 
-      {/* YesCode 余额统计 */}
-      {showBalance && <YesCodeBalance />}
+          {/* YesCode 余额统计 */}
+          {showBalance && <YesCodeBalance />}
+
+          {/* Cursor 每月用量 */}
+          {showCursorUsage && <CursorUsage />}
+        </div>
+      </div>
     </div>
   )
 }

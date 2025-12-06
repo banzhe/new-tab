@@ -1,5 +1,5 @@
-import type { Bookmark } from "@/types/messages"
 import { cn } from "@/lib/utils"
+import type { Bookmark } from "@/types/messages"
 
 interface BookmarkGridProps {
   bookmarks: Bookmark[]
