@@ -6,7 +6,11 @@ import { defineConfig } from "wxt"
 export default defineConfig({
   modules: ["@wxt-dev/module-react"],
   manifest: {
-    host_permissions: ["https://suggestqueries.google.com/*"],
+    permissions: ["storage"],
+    host_permissions: [
+      "https://suggestqueries.google.com/*",
+      "https://co.yes.vg/*",
+    ],
   },
   vite: () => ({
     plugins: [tailwindcss()],
