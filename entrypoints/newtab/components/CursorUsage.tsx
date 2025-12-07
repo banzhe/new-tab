@@ -28,6 +28,7 @@ function formatCost(cents?: number): string {
 
 export function CursorUsage() {
   const cardTitle = "Cursor 每月用量"
+  const externalLink = "https://cursor.com/usage"
   const {
     data: usageData = {
       aggregations: [],
@@ -75,7 +76,7 @@ export function CursorUsage() {
 
   if (error) {
     return (
-      <SmallCard title={cardTitle}>
+      <SmallCard title={cardTitle} externalLink={externalLink}>
         <div className="flex h-full items-center justify-center">
           <p className="text-destructive">{error.message}</p>
         </div>
@@ -84,7 +85,7 @@ export function CursorUsage() {
   }
 
   return (
-    <SmallCard loading={loading} title={cardTitle}>
+    <SmallCard loading={loading} title={cardTitle} externalLink={externalLink}>
       {/* 总计统计 */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div className="space-y-1">

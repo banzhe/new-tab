@@ -10,6 +10,7 @@ import { SmallCard } from "./SmallCard"
 
 export function YesCodeBalance() {
   const cardTitle = "YesCode 余额统计"
+  const externalLink = "https://co.yes.vg/dashboard"
   // Fetch balance using useRequest
   const {
     data: balanceData = {
@@ -59,7 +60,7 @@ export function YesCodeBalance() {
 
   if (error) {
     return (
-      <SmallCard title={cardTitle}>
+      <SmallCard title={cardTitle} externalLink={externalLink}>
         <div className="flex items-center justify-center h-full">
           <p className="text-destructive">{error.message}</p>
         </div>
@@ -71,7 +72,7 @@ export function YesCodeBalance() {
     (balanceData.weekly_spent_balance / balanceData.weekly_limit) * 100
 
   return (
-    <SmallCard loading={loading} title={cardTitle}>
+    <SmallCard loading={loading} title={cardTitle} externalLink={externalLink}>
       {/* Subscription Balance */}
       <div className="space-y-1">
         <p className="text-sm text-muted-foreground">订阅余额</p>
