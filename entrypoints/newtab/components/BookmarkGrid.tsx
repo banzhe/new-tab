@@ -9,9 +9,15 @@ interface BookmarkGridProps {
 /**
  * 获取网站的 Favicon URL
  */
-function getFaviconUrl(url: string): string {
+function getFaviconUrl(bookmark: Bookmark): string {
+  // Prefer stored favicon
+  if (bookmark.favicon) {
+    return bookmark.favicon
+  }
+
+  // Fallback to Google service (for backward compatibility)
   try {
-    const domain = new URL(url).hostname
+    const domain = new URL(bookmark.url).hostname
     return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
   } catch {
     return ""
@@ -40,7 +46,7 @@ function BookmarkGrid({ bookmarks, className }: BookmarkGridProps) {
           {/* Favicon */}
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted transition-transform group-hover:scale-110">
             <img
-              src={getFaviconUrl(bookmark.url)}
+              src={getFaviconUrl(bookmark)}
               alt=""
               className="h-6 w-6"
               loading="lazy"

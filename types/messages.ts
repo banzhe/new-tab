@@ -3,6 +3,7 @@ export interface Bookmark {
   id: string
   title: string
   url: string
+  favicon?: string // Base64 data URL
 }
 
 // ========== 存储配置类型 ==========

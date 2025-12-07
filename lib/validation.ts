@@ -15,7 +15,8 @@ function isValidBookmark(data: unknown): data is Bookmark {
   return (
     typeof b.id === "string" &&
     typeof b.title === "string" &&
-    typeof b.url === "string"
+    typeof b.url === "string" &&
+    (b.favicon === undefined || typeof b.favicon === "string")
   )
 }
 
@@ -24,10 +25,21 @@ function isValidBookmark(data: unknown): data is Bookmark {
  */
 function sanitizeBookmark(bookmark: unknown): Bookmark {
   const b = bookmark as Record<string, unknown>
+
+  // Validate favicon is either undefined or valid data URL
+  let favicon: string | undefined
+  if (b.favicon && typeof b.favicon === "string") {
+    // Only keep if it's a data URL
+    if (b.favicon.startsWith("data:image/")) {
+      favicon = b.favicon
+    }
+  }
+
   return {
     id: String(b.id || crypto.randomUUID()),
     title: String(b.title || ""),
     url: String(b.url || ""),
+    ...(favicon && { favicon }), // Only include if exists
   }
 }
 

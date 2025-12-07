@@ -2,6 +2,7 @@ import { Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { FieldGroup, FieldLegend, FieldSet } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { fetchFaviconAsDataUrl, isValidUrl } from "@/lib/favicon"
 import type { Bookmark } from "@/types/messages"
 
 interface BookmarkSettingsProps {
@@ -32,6 +33,22 @@ export function BookmarkSettings({
     onBookmarksChange(bookmarks.filter((b) => b.id !== id))
   }
 
+  const fetchFavicon = async (id: string, url: string) => {
+    if (!isValidUrl(url)) return
+
+    try {
+      const faviconData = await fetchFaviconAsDataUrl(url)
+      onBookmarksChange(
+        bookmarks.map((b) =>
+          b.id === id ? { ...b, favicon: faviconData } : b,
+        ),
+      )
+    } catch (error) {
+      console.error("Failed to fetch favicon:", error)
+    } finally {
+    }
+  }
+
   return (
     <FieldSet>
       <FieldLegend>快捷书签</FieldLegend>
@@ -51,6 +68,12 @@ export function BookmarkSettings({
               onChange={(e) =>
                 updateBookmark(bookmark.id, "url", e.target.value)
               }
+              onBlur={(e) => {
+                const url = e.target.value.trim()
+                if (url && isValidUrl(url)) {
+                  fetchFavicon(bookmark.id, url)
+                }
+              }}
               placeholder="网址 (https://...)"
               className="flex-1"
             />
