@@ -11,6 +11,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer"
+import { Separator } from "@/components/ui/separator"
 import {
   type Bookmark,
   type ConfigResponse,
@@ -18,6 +19,7 @@ import {
   type SaveConfigMessage,
 } from "@/types/messages"
 import { BookmarkSettings } from "./BookmarkSettings"
+import { ConfigImportExport } from "./ConfigImportExport"
 import { CursorSettings } from "./CursorSettings"
 import { YesCodeSettings } from "./YesCodeSettings"
 
@@ -121,6 +123,25 @@ export function SettingsDrawer() {
           <BookmarkSettings
             bookmarks={bookmarks}
             onBookmarksChange={setBookmarks}
+          />
+        </div>
+
+        {/* Import/Export section */}
+        <Separator />
+        <div className="p-4">
+          <ConfigImportExport
+            currentConfig={{
+              apiKey: yesCodeApiKey,
+              showBalance,
+              showCursorUsage,
+              bookmarks,
+            }}
+            onImport={(config) => {
+              setYesCodeApiKey(config.apiKey)
+              setShowBalance(config.showBalance)
+              setShowCursorUsage(config.showCursorUsage)
+              setBookmarks(config.bookmarks)
+            }}
           />
         </div>
 
