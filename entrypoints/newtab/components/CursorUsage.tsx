@@ -29,7 +29,14 @@ function formatCost(cents?: number): string {
 export function CursorUsage() {
   const cardTitle = "Cursor 每月用量"
   const {
-    data: usageData,
+    data: usageData = {
+      aggregations: [],
+      totalInputTokens: "0",
+      totalOutputTokens: "0",
+      totalCacheWriteTokens: "0",
+      totalCacheReadTokens: "0",
+      totalCostCents: 0,
+    },
     loading,
     error,
     refresh: fetchUsage,
@@ -66,16 +73,6 @@ export function CursorUsage() {
     }
   }, [fetchUsage])
 
-  if (loading) {
-    return (
-      <SmallCard title={cardTitle}>
-        <div className="flex h-full items-center justify-center">
-          <p className="text-muted-foreground">加载中...</p>
-        </div>
-      </SmallCard>
-    )
-  }
-
   if (error) {
     return (
       <SmallCard title={cardTitle}>
@@ -86,12 +83,8 @@ export function CursorUsage() {
     )
   }
 
-  if (!usageData) {
-    return null
-  }
-
   return (
-    <SmallCard title={cardTitle}>
+    <SmallCard loading={loading} title={cardTitle}>
       {/* 总计统计 */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div className="space-y-1">

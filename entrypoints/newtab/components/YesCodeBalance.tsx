@@ -12,7 +12,14 @@ export function YesCodeBalance() {
   const cardTitle = "YesCode 余额统计"
   // Fetch balance using useRequest
   const {
-    data: balanceData,
+    data: balanceData = {
+      subscription_balance: 0,
+      weekly_spent_balance: 0,
+      weekly_limit: 0,
+      total_balance: 0,
+      pay_as_you_go_balance: 0,
+      balance: 0,
+    },
     loading,
     error,
     refresh: fetchBalance,
@@ -50,16 +57,6 @@ export function YesCodeBalance() {
     }
   }, [fetchBalance])
 
-  if (loading) {
-    return (
-      <SmallCard title={cardTitle}>
-        <div className="flex items-center justify-center h-full">
-          <p className="text-muted-foreground">加载中...</p>
-        </div>
-      </SmallCard>
-    )
-  }
-
   if (error) {
     return (
       <SmallCard title={cardTitle}>
@@ -70,15 +67,11 @@ export function YesCodeBalance() {
     )
   }
 
-  if (!balanceData) {
-    return null
-  }
-
   const weeklyUsagePercent =
     (balanceData.weekly_spent_balance / balanceData.weekly_limit) * 100
 
   return (
-    <SmallCard title={cardTitle}>
+    <SmallCard loading={loading} title={cardTitle}>
       {/* Subscription Balance */}
       <div className="space-y-1">
         <p className="text-sm text-muted-foreground">订阅余额</p>
