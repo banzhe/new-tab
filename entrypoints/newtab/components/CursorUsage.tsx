@@ -28,7 +28,7 @@ function formatCost(cents?: number): string {
 
 export function CursorUsage() {
   const cardTitle = "Cursor 每月用量"
-  const externalLink = "https://cursor.com/usage"
+  const externalLink = "https://cursor.com/home"
   const {
     data: usageData = {
       aggregations: [],
