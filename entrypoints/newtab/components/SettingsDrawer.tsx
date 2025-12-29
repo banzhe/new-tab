@@ -17,10 +17,14 @@ import {
   type ConfigResponse,
   MessageType,
   type SaveConfigMessage,
+  type SendCookieConfig,
+  type SendCookieConfigResponse,
+  type SaveSendCookieConfigMessage,
 } from "@/types/messages"
 import { BookmarkSettings } from "./BookmarkSettings"
 import { ConfigImportExport } from "./ConfigImportExport"
 import { CursorSettings } from "./CursorSettings"
+import { SendCookieSettings } from "./SendCookieSettings"
 import { YesCodeSettings } from "./YesCodeSettings"
 
 export function SettingsDrawer() {
@@ -29,20 +33,34 @@ export function SettingsDrawer() {
   const [showBalance, setShowBalance] = useState(true)
   const [showCursorUsage, setShowCursorUsage] = useState(true)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
+  const [sendCookieConfigs, setSendCookieConfigs] = useState<SendCookieConfig>(
+    [],
+  )
 
   // Load config using useRequest
   const { refresh: reloadConfig } = useRequest(
     async () => {
-      const response: ConfigResponse = await browser.runtime.sendMessage({
-        type: MessageType.GET_CONFIG,
-      })
-      if (response.success && response.data) {
-        setYesCodeApiKey(response.data.apiKey)
-        setShowBalance(response.data.showBalance)
-        setShowCursorUsage(response.data.showCursorUsage)
-        setBookmarks(response.data.bookmarks || [])
+      const [configResponse, sendCookieResponse] = await Promise.all([
+        browser.runtime.sendMessage<ConfigResponse>({
+          type: MessageType.GET_CONFIG,
+        }),
+        browser.runtime.sendMessage<SendCookieConfigResponse>({
+          type: MessageType.GET_SEND_COOKIE_CONFIG,
+        }),
+      ])
+
+      if (configResponse.success && configResponse.data) {
+        setYesCodeApiKey(configResponse.data.apiKey)
+        setShowBalance(configResponse.data.showBalance)
+        setShowCursorUsage(configResponse.data.showCursorUsage)
+        setBookmarks(configResponse.data.bookmarks || [])
       }
-      return response
+
+      if (sendCookieResponse.success && sendCookieResponse.data) {
+        setSendCookieConfigs(sendCookieResponse.data)
+      }
+
+      return { configResponse, sendCookieResponse }
     },
     {
       onError: (error) => {
@@ -54,24 +72,38 @@ export function SettingsDrawer() {
   // Save config using useRequest
   const { loading: saving, run: saveConfig } = useRequest(
     async () => {
-      const response = await browser.runtime.sendMessage<SaveConfigMessage>({
-        type: MessageType.SAVE_CONFIG,
-        payload: {
-          apiKey: yesCodeApiKey,
-          showBalance,
-          showCursorUsage,
-          bookmarks,
-        },
-      })
+      const [configResponse, sendCookieResponse] = await Promise.all([
+        browser.runtime.sendMessage<SaveConfigMessage>({
+          type: MessageType.SAVE_CONFIG,
+          payload: {
+            apiKey: yesCodeApiKey,
+            showBalance,
+            showCursorUsage,
+            bookmarks,
+          },
+        }),
+        browser.runtime.sendMessage<SaveSendCookieConfigMessage>({
+          type: MessageType.SAVE_SEND_COOKIE_CONFIG,
+          payload: sendCookieConfigs,
+        }),
+      ])
 
-      if (response.success) {
-        setOpen(false)
-        // Background script will automatically broadcast update notification
-      } else {
-        throw new Error(response.error || "Failed to save config")
+      if (!configResponse.success) {
+        throw new Error(configResponse.error || "Failed to save config")
       }
 
-      return response
+      if (!sendCookieResponse.success) {
+        throw new Error(
+          sendCookieResponse.error || "Failed to save sendCookie config",
+        )
+      }
+
+      if (configResponse.success && sendCookieResponse.success) {
+        setOpen(false)
+        // Background script will automatically broadcast update notification
+      }
+
+      return { configResponse, sendCookieResponse }
     },
     {
       manual: true,
@@ -123,6 +155,11 @@ export function SettingsDrawer() {
           <BookmarkSettings
             bookmarks={bookmarks}
             onBookmarksChange={setBookmarks}
+          />
+
+          <SendCookieSettings
+            configs={sendCookieConfigs}
+            onConfigsChange={setSendCookieConfigs}
           />
         </div>
 

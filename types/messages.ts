@@ -43,12 +43,28 @@ export interface CursorUsageData {
   totalCostCents: number
 }
 
+// ========== SendCookie 配置类型 ==========
+export interface SendCookieConfigItem {
+  id: string // 唯一标识符
+  domain: string // 网站域名（如 "example.com"）
+  apiUrl: string // 后端 API 地址（完整 URL）
+  interval: number // 发送间隔（毫秒）
+  enabled: boolean // 是否启用
+}
+
+export type SendCookieConfig = SendCookieConfigItem[]
+
 // ========== 消息类型枚举 ==========
 export enum MessageType {
   // 配置相关
   GET_CONFIG = "GET_CONFIG",
   SAVE_CONFIG = "SAVE_CONFIG",
   CONFIG_UPDATED = "CONFIG_UPDATED",
+
+  // SendCookie 配置相关
+  GET_SEND_COOKIE_CONFIG = "GET_SEND_COOKIE_CONFIG",
+  SAVE_SEND_COOKIE_CONFIG = "SAVE_SEND_COOKIE_CONFIG",
+  SEND_COOKIE_CONFIG_UPDATED = "SEND_COOKIE_CONFIG_UPDATED",
 
   // 余额相关
   FETCH_BALANCE = "FETCH_BALANCE",
@@ -84,6 +100,19 @@ export interface ConfigUpdatedMessage extends BaseMessage {
   type: MessageType.CONFIG_UPDATED
 }
 
+export interface GetSendCookieConfigMessage extends BaseMessage {
+  type: MessageType.GET_SEND_COOKIE_CONFIG
+}
+
+export interface SaveSendCookieConfigMessage extends BaseMessage {
+  type: MessageType.SAVE_SEND_COOKIE_CONFIG
+  payload: SendCookieConfig
+}
+
+export interface SendCookieConfigUpdatedMessage extends BaseMessage {
+  type: MessageType.SEND_COOKIE_CONFIG_UPDATED
+}
+
 // 响应消息
 export interface MessageResponse<T = unknown> {
   success: boolean
@@ -92,6 +121,7 @@ export interface MessageResponse<T = unknown> {
 }
 
 export type ConfigResponse = MessageResponse<YesCodeConfig>
+export type SendCookieConfigResponse = MessageResponse<SendCookieConfig>
 export type BalanceResponse = MessageResponse<YesCodeBalanceData>
 export type CursorUsageResponse = MessageResponse<CursorUsageData>
 
@@ -99,6 +129,9 @@ export type CursorUsageResponse = MessageResponse<CursorUsageData>
 export type ExtensionMessage =
   | GetConfigMessage
   | SaveConfigMessage
+  | GetSendCookieConfigMessage
+  | SaveSendCookieConfigMessage
   | FetchBalanceMessage
   | FetchCursorUsageMessage
   | ConfigUpdatedMessage
+  | SendCookieConfigUpdatedMessage

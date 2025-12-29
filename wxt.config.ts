@@ -8,9 +8,7 @@ export default defineConfig({
   manifest: {
     permissions: ["storage", "cookies"],
     host_permissions: [
-      "https://suggestqueries.google.com/*",
-      "https://co.yes.vg/*",
-      "https://cursor.com/*",
+      "<all_urls>", // 允许访问所有域名的 cookie
     ],
   },
   vite: () => ({
