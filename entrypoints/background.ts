@@ -70,46 +70,12 @@ export default defineBackground(() => {
         }
 
         case MessageType.FETCH_BALANCE: {
-          // 获取 yes.vg 的认证 cookie
-          const cookies = await browser.cookies.getAll({
-            domain: "yes.vg",
-          })
-
-          if (!cookies || cookies.length === 0) {
-            return {
-              success: false,
-              error: "请先在浏览器中登录 yes.vg",
-            }
-          }
-
-          // 将所有 cookie 拼接成字符串
-          const cookieString = cookies
-            .map((c) => `${c.name}=${c.value}`)
-            .join("; ")
-
-          const balanceData = await fetchYesCodeBalance(cookieString)
+          const balanceData = await fetchYesCodeBalance()
           return { success: true, data: balanceData }
         }
 
         case MessageType.FETCH_CURSOR_USAGE: {
-          // 获取 cursor.com 的认证 cookie
-          const cookies = await browser.cookies.getAll({
-            domain: "cursor.com",
-          })
-
-          if (!cookies || cookies.length === 0) {
-            return {
-              success: false,
-              error: "请先在浏览器中登录 cursor.com",
-            }
-          }
-
-          // 将所有 cookie 拼接成字符串
-          const cookieString = cookies
-            .map((c) => `${c.name}=${c.value}`)
-            .join("; ")
-
-          const usageData = await fetchCursorUsage(cookieString)
+          const usageData = await fetchCursorUsage()
           return { success: true, data: usageData }
         }
 
