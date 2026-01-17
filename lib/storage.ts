@@ -6,7 +6,6 @@ export const yesCodeConfig = storage.defineItem<YesCodeConfig>(
   "local:yesCodeConfig",
   {
     fallback: {
-      apiKey: "",
       showBalance: true,
       showCursorUsage: true,
       bookmarks: [],

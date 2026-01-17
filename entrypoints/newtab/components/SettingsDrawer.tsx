@@ -29,7 +29,6 @@ import { YesCodeSettings } from "./YesCodeSettings"
 
 export function SettingsDrawer() {
   const [open, setOpen] = useState(false)
-  const [yesCodeApiKey, setYesCodeApiKey] = useState("")
   const [showBalance, setShowBalance] = useState(true)
   const [showCursorUsage, setShowCursorUsage] = useState(true)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
@@ -50,7 +49,6 @@ export function SettingsDrawer() {
       ])
 
       if (configResponse.success && configResponse.data) {
-        setYesCodeApiKey(configResponse.data.apiKey)
         setShowBalance(configResponse.data.showBalance)
         setShowCursorUsage(configResponse.data.showCursorUsage)
         setBookmarks(configResponse.data.bookmarks || [])
@@ -76,7 +74,6 @@ export function SettingsDrawer() {
         browser.runtime.sendMessage<SaveConfigMessage>({
           type: MessageType.SAVE_CONFIG,
           payload: {
-            apiKey: yesCodeApiKey,
             showBalance,
             showCursorUsage,
             bookmarks,
@@ -141,8 +138,6 @@ export function SettingsDrawer() {
         {/* Scrollable content area */}
         <div className="flex-1 space-y-6 overflow-y-auto p-4">
           <YesCodeSettings
-            apiKey={yesCodeApiKey}
-            onApiKeyChange={setYesCodeApiKey}
             showBalance={showBalance}
             onShowBalanceChange={setShowBalance}
           />
@@ -168,13 +163,11 @@ export function SettingsDrawer() {
         <div className="p-4">
           <ConfigImportExport
             currentConfig={{
-              apiKey: yesCodeApiKey,
               showBalance,
               showCursorUsage,
               bookmarks,
             }}
             onImport={(config) => {
-              setYesCodeApiKey(config.apiKey)
               setShowBalance(config.showBalance)
               setShowCursorUsage(config.showCursorUsage)
               setBookmarks(config.bookmarks)

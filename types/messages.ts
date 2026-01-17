@@ -8,7 +8,6 @@ export interface Bookmark {
 
 // ========== 存储配置类型 ==========
 export interface YesCodeConfig {
-  apiKey: string
   showBalance: boolean
   showCursorUsage: boolean
   bookmarks: Bookmark[]

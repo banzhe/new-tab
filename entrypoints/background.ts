@@ -70,16 +70,24 @@ export default defineBackground(() => {
         }
 
         case MessageType.FETCH_BALANCE: {
-          const config = await getConfig()
+          // 获取 yes.vg 的认证 cookie
+          const cookies = await browser.cookies.getAll({
+            domain: "yes.vg",
+          })
 
-          if (!config.apiKey) {
+          if (!cookies || cookies.length === 0) {
             return {
               success: false,
-              error: "请先在设置中配置 API Key",
+              error: "请先在浏览器中登录 yes.vg",
             }
           }
 
-          const balanceData = await fetchYesCodeBalance(config.apiKey)
+          // 将所有 cookie 拼接成字符串
+          const cookieString = cookies
+            .map((c) => `${c.name}=${c.value}`)
+            .join("; ")
+
+          const balanceData = await fetchYesCodeBalance(cookieString)
           return { success: true, data: balanceData }
         }
 

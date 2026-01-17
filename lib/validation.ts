@@ -58,7 +58,6 @@ export function validateConfig(data: unknown): ValidationResult {
 
   // 2. 必需字段检查
   const requiredFields = [
-    "apiKey",
     "showBalance",
     "showCursorUsage",
     "bookmarks",
@@ -70,10 +69,6 @@ export function validateConfig(data: unknown): ValidationResult {
   }
 
   // 3. 字段类型验证
-  if (typeof config.apiKey !== "string") {
-    return { valid: false, error: "apiKey 必须是字符串" }
-  }
-
   if (typeof config.showBalance !== "boolean") {
     return { valid: false, error: "showBalance 必须是布尔值" }
   }
@@ -96,7 +91,6 @@ export function validateConfig(data: unknown): ValidationResult {
 
   // 5. 数据清洗 - 移除未知字段，确保类型正确
   const sanitized: YesCodeConfig = {
-    apiKey: String(config.apiKey),
     showBalance: Boolean(config.showBalance),
     showCursorUsage: Boolean(config.showCursorUsage),
     bookmarks: config.bookmarks.map(sanitizeBookmark),

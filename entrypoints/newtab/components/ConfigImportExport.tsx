@@ -21,7 +21,6 @@ export function ConfigImportExport({
   currentConfig,
   onImport,
 }: ConfigImportExportProps) {
-  const [includeApiKey, setIncludeApiKey] = useState(true)
   const [showPreview, setShowPreview] = useState(false)
   const [importData, setImportData] = useState<YesCodeConfig | null>(null)
   const [error, setError] = useState<string>("")
@@ -31,13 +30,8 @@ export function ConfigImportExport({
    * 处理配置导出
    */
   const handleExport = () => {
-    // 根据选项决定是否包含 API Key
-    const configToExport = includeApiKey
-      ? currentConfig
-      : { ...currentConfig, apiKey: "" }
-
     // 生成 JSON 字符串
-    const json = JSON.stringify(configToExport, null, 2)
+    const json = JSON.stringify(currentConfig, null, 2)
     const blob = new Blob([json], { type: "application/json" })
     const url = URL.createObjectURL(blob)
 
@@ -118,15 +112,6 @@ export function ConfigImportExport({
     }
   }
 
-  /**
-   * 格式化 API Key 显示（脱敏）
-   */
-  const formatApiKey = (apiKey: string) => {
-    if (!apiKey) return "(未设置)"
-    if (apiKey.length <= 8) return "●".repeat(apiKey.length)
-    return `${apiKey.slice(0, 4)}${"●".repeat(8)}${apiKey.slice(-4)}`
-  }
-
   return (
     <>
       <div className="space-y-3">
@@ -165,16 +150,6 @@ export function ConfigImportExport({
           </div>
         </div>
 
-        <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-          <input
-            type="checkbox"
-            checked={includeApiKey}
-            onChange={(e) => setIncludeApiKey(e.target.checked)}
-            className="rounded"
-          />
-          导出时包含 API Key
-        </label>
-
         {error && (
           <div className="text-destructive text-xs flex items-center gap-1">
             <AlertCircle className="h-3 w-3" />
@@ -193,12 +168,6 @@ export function ConfigImportExport({
 
           {importData && (
             <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">API Key:</span>
-                <span className="font-mono text-xs">
-                  {formatApiKey(importData.apiKey)}
-                </span>
-              </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">显示余额:</span>
                 <span>{importData.showBalance ? "✓" : "✗"}</span>
