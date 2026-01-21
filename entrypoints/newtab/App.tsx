@@ -10,10 +10,12 @@ import { CursorUsage } from "./components/CursorUsage"
 import { SearchBar } from "./components/SearchBar"
 import { SettingsDrawer } from "./components/SettingsDrawer"
 import { YesCodeBalance } from "./components/YesCodeBalance"
+import { MiniMaxUsage } from "./components/MiniMaxUsage"
 
 function App() {
   const [showBalance, setShowBalance] = useState(true)
   const [showCursorUsage, setShowCursorUsage] = useState(true)
+  const [showMiniMaxUsage, setShowMiniMaxUsage] = useState(true)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
 
   useEffect(() => {
@@ -31,6 +33,18 @@ function App() {
         console.error("Failed to load config:", error)
       })
 
+    // Load MiniMax config
+    browser.runtime
+      .sendMessage({ type: MessageType.GET_MINIMAX_CONFIG })
+      .then((response) => {
+        if (response.success && response.data) {
+          setShowMiniMaxUsage(response.data.showUsage)
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to load MiniMax config:", error)
+      })
+
     // Listen for config updates
     const handleMessage = (message: ConfigUpdatedMessage) => {
       if (message.type === MessageType.CONFIG_UPDATED) {
@@ -45,6 +59,18 @@ function App() {
           })
           .catch((error) => {
             console.error("Failed to reload config:", error)
+          })
+
+        // Reload MiniMax config
+        browser.runtime
+          .sendMessage({ type: MessageType.GET_MINIMAX_CONFIG })
+          .then((response) => {
+            if (response.success && response.data) {
+              setShowMiniMaxUsage(response.data.showUsage)
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to reload MiniMax config:", error)
           })
       }
     }
@@ -79,6 +105,9 @@ function App() {
 
             {/* Cursor 每月用量 */}
             {showCursorUsage && <CursorUsage />}
+
+            {/* MiniMax 周期用量 */}
+            {showMiniMaxUsage && <MiniMaxUsage />}
           </div>
         </div>
       </div>

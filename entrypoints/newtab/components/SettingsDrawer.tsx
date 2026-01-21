@@ -16,21 +16,23 @@ import {
   type Bookmark,
   type ConfigResponse,
   MessageType,
-  type SaveConfigMessage,
   type SendCookieConfig,
   type SendCookieConfigResponse,
-  type SaveSendCookieConfigMessage,
+  type MiniMaxConfigResponse,
 } from "@/types/messages"
 import { BookmarkSettings } from "./BookmarkSettings"
 import { ConfigImportExport } from "./ConfigImportExport"
 import { CursorSettings } from "./CursorSettings"
 import { SendCookieSettings } from "./SendCookieSettings"
 import { YesCodeSettings } from "./YesCodeSettings"
+import { MiniMaxSettings } from "./MiniMaxSettings"
 
 export function SettingsDrawer() {
   const [open, setOpen] = useState(false)
   const [showBalance, setShowBalance] = useState(true)
   const [showCursorUsage, setShowCursorUsage] = useState(true)
+  const [miniMaxApiKey, setMiniMaxApiKey] = useState("")
+  const [showMiniMaxUsage, setShowMiniMaxUsage] = useState(true)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [sendCookieConfigs, setSendCookieConfigs] = useState<SendCookieConfig>(
     [],
@@ -39,14 +41,18 @@ export function SettingsDrawer() {
   // Load config using useRequest
   const { refresh: reloadConfig } = useRequest(
     async () => {
-      const [configResponse, sendCookieResponse] = await Promise.all([
-        browser.runtime.sendMessage<ConfigResponse>({
-          type: MessageType.GET_CONFIG,
-        }),
-        browser.runtime.sendMessage<SendCookieConfigResponse>({
-          type: MessageType.GET_SEND_COOKIE_CONFIG,
-        }),
-      ])
+      const [configResponse, sendCookieResponse, miniMaxResponse] =
+        await Promise.all([
+          browser.runtime.sendMessage({
+            type: MessageType.GET_CONFIG,
+          }) as Promise<ConfigResponse>,
+          browser.runtime.sendMessage({
+            type: MessageType.GET_SEND_COOKIE_CONFIG,
+          }) as Promise<SendCookieConfigResponse>,
+          browser.runtime.sendMessage({
+            type: MessageType.GET_MINIMAX_CONFIG,
+          }) as Promise<MiniMaxConfigResponse>,
+        ])
 
       if (configResponse.success && configResponse.data) {
         setShowBalance(configResponse.data.showBalance)
@@ -58,7 +64,12 @@ export function SettingsDrawer() {
         setSendCookieConfigs(sendCookieResponse.data)
       }
 
-      return { configResponse, sendCookieResponse }
+      if (miniMaxResponse.success && miniMaxResponse.data) {
+        setMiniMaxApiKey(miniMaxResponse.data.apiKey)
+        setShowMiniMaxUsage(miniMaxResponse.data.showUsage)
+      }
+
+      return { configResponse, sendCookieResponse, miniMaxResponse }
     },
     {
       onError: (error) => {
@@ -70,20 +81,28 @@ export function SettingsDrawer() {
   // Save config using useRequest
   const { loading: saving, run: saveConfig } = useRequest(
     async () => {
-      const [configResponse, sendCookieResponse] = await Promise.all([
-        browser.runtime.sendMessage<SaveConfigMessage>({
-          type: MessageType.SAVE_CONFIG,
-          payload: {
-            showBalance,
-            showCursorUsage,
-            bookmarks,
-          },
-        }),
-        browser.runtime.sendMessage<SaveSendCookieConfigMessage>({
-          type: MessageType.SAVE_SEND_COOKIE_CONFIG,
-          payload: sendCookieConfigs,
-        }),
-      ])
+      const [configResponse, sendCookieResponse, miniMaxResponse] =
+        await Promise.all([
+          browser.runtime.sendMessage({
+            type: MessageType.SAVE_CONFIG,
+            payload: {
+              showBalance,
+              showCursorUsage,
+              bookmarks,
+            },
+          }) as Promise<ConfigResponse>,
+          browser.runtime.sendMessage({
+            type: MessageType.SAVE_SEND_COOKIE_CONFIG,
+            payload: sendCookieConfigs,
+          }) as Promise<SendCookieConfigResponse>,
+          browser.runtime.sendMessage({
+            type: MessageType.SAVE_MINIMAX_CONFIG,
+            payload: {
+              apiKey: miniMaxApiKey,
+              showUsage: showMiniMaxUsage,
+            },
+          }) as Promise<MiniMaxConfigResponse>,
+        ])
 
       if (!configResponse.success) {
         throw new Error(configResponse.error || "Failed to save config")
@@ -95,12 +114,18 @@ export function SettingsDrawer() {
         )
       }
 
+      if (!miniMaxResponse.success) {
+        throw new Error(
+          miniMaxResponse.error || "Failed to save MiniMax config",
+        )
+      }
+
       if (configResponse.success && sendCookieResponse.success) {
         setOpen(false)
         // Background script will automatically broadcast update notification
       }
 
-      return { configResponse, sendCookieResponse }
+      return { configResponse, sendCookieResponse, miniMaxResponse }
     },
     {
       manual: true,
@@ -145,6 +170,13 @@ export function SettingsDrawer() {
           <CursorSettings
             showCursorUsage={showCursorUsage}
             onShowCursorUsageChange={setShowCursorUsage}
+          />
+
+          <MiniMaxSettings
+            apiKey={miniMaxApiKey}
+            showUsage={showMiniMaxUsage}
+            onApiKeyChange={setMiniMaxApiKey}
+            onShowUsageChange={setShowMiniMaxUsage}
           />
 
           <BookmarkSettings

@@ -53,6 +53,26 @@ export interface SendCookieConfigItem {
 
 export type SendCookieConfig = SendCookieConfigItem[]
 
+// ========== MiniMax 配置类型 ==========
+export interface MiniMaxConfig {
+  apiKey: string
+  showUsage: boolean
+}
+
+// ========== MiniMax 周期用量数据类型 ==========
+export interface ModelRemain {
+  start_time: number
+  end_time: number
+  remains_time: number
+  current_interval_total_count: number
+  current_interval_usage_count: number
+  model_name: string
+}
+
+export interface MiniMaxRemainsData {
+  model_remains: ModelRemain[]
+}
+
 // ========== 消息类型枚举 ==========
 export enum MessageType {
   // 配置相关
@@ -70,6 +90,11 @@ export enum MessageType {
 
   // Cursor 用量相关
   FETCH_CURSOR_USAGE = "FETCH_CURSOR_USAGE",
+
+  // MiniMax 用量相关
+  GET_MINIMAX_CONFIG = "GET_MINIMAX_CONFIG",
+  SAVE_MINIMAX_CONFIG = "SAVE_MINIMAX_CONFIG",
+  FETCH_MINIMAX_REMAINS = "FETCH_MINIMAX_REMAINS",
 }
 
 // ========== 消息结构定义 ==========
@@ -112,6 +137,20 @@ export interface SendCookieConfigUpdatedMessage extends BaseMessage {
   type: MessageType.SEND_COOKIE_CONFIG_UPDATED
 }
 
+// MiniMax 相关消息
+export interface GetMiniMaxConfigMessage extends BaseMessage {
+  type: MessageType.GET_MINIMAX_CONFIG
+}
+
+export interface SaveMiniMaxConfigMessage extends BaseMessage {
+  type: MessageType.SAVE_MINIMAX_CONFIG
+  payload: MiniMaxConfig
+}
+
+export interface FetchMiniMaxRemainsMessage extends BaseMessage {
+  type: MessageType.FETCH_MINIMAX_REMAINS
+}
+
 // 响应消息
 export interface MessageResponse<T = unknown> {
   success: boolean
@@ -123,6 +162,8 @@ export type ConfigResponse = MessageResponse<YesCodeConfig>
 export type SendCookieConfigResponse = MessageResponse<SendCookieConfig>
 export type BalanceResponse = MessageResponse<YesCodeBalanceData>
 export type CursorUsageResponse = MessageResponse<CursorUsageData>
+export type MiniMaxConfigResponse = MessageResponse<MiniMaxConfig>
+export type MiniMaxRemainsResponse = MessageResponse<MiniMaxRemainsData>
 
 // 联合类型
 export type ExtensionMessage =
@@ -134,3 +175,6 @@ export type ExtensionMessage =
   | FetchCursorUsageMessage
   | ConfigUpdatedMessage
   | SendCookieConfigUpdatedMessage
+  | GetMiniMaxConfigMessage
+  | SaveMiniMaxConfigMessage
+  | FetchMiniMaxRemainsMessage

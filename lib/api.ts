@@ -1,4 +1,4 @@
-import type { CursorUsageData, YesCodeBalanceData } from "@/types/messages"
+import type { CursorUsageData, YesCodeBalanceData, MiniMaxRemainsData } from "@/types/messages"
 
 // 硬编码的 API 配置
 const YESCODE_API_URL = "https://co.yes.vg/api/v1/user/balance"
@@ -65,4 +65,38 @@ export async function fetchCursorUsage(
 
   const data = await response.json()
   return data as CursorUsageData
+}
+
+// MiniMax API 配置
+const MINIMAX_API_URL =
+  "https://www.minimaxi.com/v1/api/openplatform/coding_plan/remains"
+
+/**
+ * 获取 MiniMax 周期用量数据
+ * @param apiKey MiniMax API Key
+ * @returns 用量数据
+ * @throws 当 apiKey 为空时抛出错误
+ * @throws 当网络请求失败时抛出错误
+ */
+export async function fetchMiniMaxRemains(
+  apiKey: string,
+): Promise<MiniMaxRemainsData> {
+  if (!apiKey) {
+    throw new Error("API Key 不能为空")
+  }
+
+  const response = await fetch(MINIMAX_API_URL, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`请求失败: ${response.status} ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  return data as MiniMaxRemainsData
 }

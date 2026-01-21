@@ -1,9 +1,11 @@
-import { fetchCursorUsage, fetchYesCodeBalance } from "@/lib/api"
+import { fetchCursorUsage, fetchYesCodeBalance, fetchMiniMaxRemains } from "@/lib/api"
 import {
   getConfig,
   getSendCookieConfig,
   saveConfig,
   saveSendCookieConfig,
+  getMiniMaxConfig,
+  saveMiniMaxConfig,
 } from "@/lib/storage"
 import type {
   ExtensionMessage,
@@ -125,6 +127,30 @@ export default defineBackground(() => {
           // 广播配置更新通知
           await notifySendCookieConfigUpdate()
           return { success: true }
+        }
+
+        case MessageType.GET_MINIMAX_CONFIG: {
+          const config = await getMiniMaxConfig()
+          return { success: true, data: config }
+        }
+
+        case MessageType.SAVE_MINIMAX_CONFIG: {
+          await saveMiniMaxConfig(message.payload)
+          return { success: true }
+        }
+
+        case MessageType.FETCH_MINIMAX_REMAINS: {
+          const config = await getMiniMaxConfig()
+
+          if (!config.apiKey) {
+            return {
+              success: false,
+              error: "请先在设置中配置 MiniMax API Key",
+            }
+          }
+
+          const remainsData = await fetchMiniMaxRemains(config.apiKey)
+          return { success: true, data: remainsData }
         }
 
         default: {
