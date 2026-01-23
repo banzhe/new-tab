@@ -1,16 +1,12 @@
 import { useEffect, useState } from "react"
-import {
-  type Bookmark,
-  type ConfigResponse,
-  type ConfigUpdatedMessage,
-  MessageType,
-} from "@/types/messages"
+import { type Bookmark } from "@/types/messages"
 import { BookmarkGrid } from "./components/BookmarkGrid"
 import { CursorUsage } from "./components/CursorUsage"
 import { SearchBar } from "./components/SearchBar"
 import { SettingsDrawer } from "./components/SettingsDrawer"
 import { YesCodeBalance } from "./components/YesCodeBalance"
 import { MiniMaxUsage } from "./components/MiniMaxUsage"
+import { sendMessage, onMessage } from "webext-bridge/content-script"
 
 function App() {
   const [showBalance, setShowBalance] = useState(true)
@@ -20,9 +16,8 @@ function App() {
 
   useEffect(() => {
     // Load initial config
-    browser.runtime
-      .sendMessage({ type: MessageType.GET_CONFIG })
-      .then((response: ConfigResponse) => {
+    sendMessage("getConfig", null, "background")
+      .then((response) => {
         if (response.success && response.data) {
           setShowBalance(response.data.showBalance)
           setShowCursorUsage(response.data.showCursorUsage)
@@ -34,8 +29,7 @@ function App() {
       })
 
     // Load MiniMax config
-    browser.runtime
-      .sendMessage({ type: MessageType.GET_MINIMAX_CONFIG })
+    sendMessage("getMiniMaxConfig", null, "background")
       .then((response) => {
         if (response.success && response.data) {
           setShowMiniMaxUsage(response.data.showUsage)
@@ -46,40 +40,30 @@ function App() {
       })
 
     // Listen for config updates
-    const handleMessage = (message: ConfigUpdatedMessage) => {
-      if (message.type === MessageType.CONFIG_UPDATED) {
-        browser.runtime
-          .sendMessage({ type: MessageType.GET_CONFIG })
-          .then((response: ConfigResponse) => {
-            if (response.success && response.data) {
-              setShowBalance(response.data.showBalance)
-              setShowCursorUsage(response.data.showCursorUsage)
-              setBookmarks(response.data.bookmarks || [])
-            }
-          })
-          .catch((error) => {
-            console.error("Failed to reload config:", error)
-          })
+    onMessage("configUpdated", () => {
+      sendMessage("getConfig", null, "background")
+        .then((response) => {
+          if (response.success && response.data) {
+            setShowBalance(response.data.showBalance)
+            setShowCursorUsage(response.data.showCursorUsage)
+            setBookmarks(response.data.bookmarks || [])
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to reload config:", error)
+        })
 
-        // Reload MiniMax config
-        browser.runtime
-          .sendMessage({ type: MessageType.GET_MINIMAX_CONFIG })
-          .then((response) => {
-            if (response.success && response.data) {
-              setShowMiniMaxUsage(response.data.showUsage)
-            }
-          })
-          .catch((error) => {
-            console.error("Failed to reload MiniMax config:", error)
-          })
-      }
-    }
-
-    browser.runtime.onMessage.addListener(handleMessage)
-
-    return () => {
-      browser.runtime.onMessage.removeListener(handleMessage)
-    }
+      // Reload MiniMax config
+      sendMessage("getMiniMaxConfig", null, "background")
+        .then((response) => {
+          if (response.success && response.data) {
+            setShowMiniMaxUsage(response.data.showUsage)
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to reload MiniMax config:", error)
+        })
+    })
   }, [])
 
   return (

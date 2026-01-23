@@ -1,12 +1,8 @@
 import { useRequest } from "ahooks"
 import { useEffect } from "react"
 import { Progress } from "@/components/ui/progress"
-import {
-  type BalanceResponse,
-  type ConfigUpdatedMessage,
-  MessageType,
-} from "@/types/messages"
 import { SmallCard } from "./SmallCard"
+import { sendMessage, onMessage } from "webext-bridge/content-script"
 
 export function YesCodeBalance() {
   const cardTitle = "YesCode 余额统计"
@@ -26,9 +22,7 @@ export function YesCodeBalance() {
     refresh: fetchBalance,
   } = useRequest(
     async () => {
-      const response: BalanceResponse = await browser.runtime.sendMessage({
-        type: MessageType.FETCH_BALANCE,
-      })
+      const response = await sendMessage("fetchBalance", null, "background")
 
       if (response.success && response.data) {
         return response.data
@@ -45,17 +39,9 @@ export function YesCodeBalance() {
 
   useEffect(() => {
     // Listen for config updates from background script
-    const handleMessage = (message: ConfigUpdatedMessage) => {
-      if (message.type === MessageType.CONFIG_UPDATED) {
-        fetchBalance()
-      }
-    }
-
-    browser.runtime.onMessage.addListener(handleMessage)
-
-    return () => {
-      browser.runtime.onMessage.removeListener(handleMessage)
-    }
+    onMessage("configUpdated", () => {
+      fetchBalance()
+    })
   }, [fetchBalance])
 
   if (error) {

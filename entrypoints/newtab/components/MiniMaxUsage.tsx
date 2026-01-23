@@ -1,12 +1,8 @@
 import { useRequest } from "ahooks"
 import { useEffect } from "react"
 import { Progress } from "@/components/ui/progress"
-import {
-  type MiniMaxRemainsResponse,
-  type ModelRemain,
-  MessageType,
-} from "@/types/messages"
 import { SmallCard } from "./SmallCard"
+import { sendMessage, onMessage } from "webext-bridge/content-script"
 
 function formatTime(ms: number): string {
   if (ms <= 0) return "即将重置"
@@ -25,6 +21,15 @@ function formatTime(ms: number): string {
     return `${minutes}分钟${seconds % 60}秒后重置`
   }
   return `${seconds}秒后重置`
+}
+
+interface ModelRemain {
+  start_time: number
+  end_time: number
+  remains_time: number
+  current_interval_total_count: number
+  current_interval_usage_count: number
+  model_name: string
 }
 
 interface ModelRemainCardProps {
@@ -68,10 +73,7 @@ export function MiniMaxUsage() {
     refresh: fetchRemains,
   } = useRequest(
     async () => {
-      const response: MiniMaxRemainsResponse =
-        await browser.runtime.sendMessage({
-          type: MessageType.FETCH_MINIMAX_REMAINS,
-        })
+      const response = await sendMessage("fetchMiniMaxRemains", null, "background")
 
       if (response.success && response.data) {
         return response.data
@@ -88,17 +90,9 @@ export function MiniMaxUsage() {
 
   useEffect(() => {
     // 监听配置更新
-    const handleMessage = (message: { type: string }) => {
-      if (message.type === MessageType.CONFIG_UPDATED) {
-        fetchRemains()
-      }
-    }
-
-    browser.runtime.onMessage.addListener(handleMessage)
-
-    return () => {
-      browser.runtime.onMessage.removeListener(handleMessage)
-    }
+    onMessage("configUpdated", () => {
+      fetchRemains()
+    })
   }, [fetchRemains])
 
   if (error) {

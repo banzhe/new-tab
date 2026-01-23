@@ -1,11 +1,7 @@
 import { useRequest } from "ahooks"
 import { useEffect } from "react"
-import {
-  type ConfigUpdatedMessage,
-  type CursorUsageResponse,
-  MessageType,
-} from "@/types/messages"
 import { SmallCard } from "./SmallCard"
+import { sendMessage, onMessage } from "webext-bridge/content-script"
 
 // 格式化 token 数量
 function formatTokens(tokens?: string): string {
@@ -43,9 +39,7 @@ export function CursorUsage() {
     refresh: fetchUsage,
   } = useRequest(
     async () => {
-      const response: CursorUsageResponse = await browser.runtime.sendMessage({
-        type: MessageType.FETCH_CURSOR_USAGE,
-      })
+      const response = await sendMessage("fetchCursorUsage", null, "background")
 
       if (response.success && response.data) {
         return response.data
@@ -61,17 +55,9 @@ export function CursorUsage() {
   )
 
   useEffect(() => {
-    const handleMessage = (message: ConfigUpdatedMessage) => {
-      if (message.type === MessageType.CONFIG_UPDATED) {
-        fetchUsage()
-      }
-    }
-
-    browser.runtime.onMessage.addListener(handleMessage)
-
-    return () => {
-      browser.runtime.onMessage.removeListener(handleMessage)
-    }
+    onMessage("configUpdated", () => {
+      fetchUsage()
+    })
   }, [fetchUsage])
 
   if (error) {

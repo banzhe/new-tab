@@ -7,12 +7,10 @@ import {
   getMiniMaxConfig,
   saveMiniMaxConfig,
 } from "@/lib/storage"
-import type {
-  ExtensionMessage,
-  MessageResponse,
-  SendCookieConfigItem,
-} from "@/types/messages"
-import { MessageType } from "@/types/messages"
+
+// 初始化 webext-bridge，必须在其他导入之前
+import "webext-bridge/background"
+import { onMessage, sendMessage } from "webext-bridge/background"
 
 export default defineBackground(() => {
   console.log("Background script initialized", { id: browser.runtime.id })
@@ -29,196 +27,113 @@ export default defineBackground(() => {
     }
   })()
 
-  // 监听来自前端的消息
-  browser.runtime.onMessage.addListener(
-    (
-      message: ExtensionMessage,
-      _sender,
-      sendResponse: (response: MessageResponse) => void,
-    ) => {
-      // 异步处理消息
-      handleMessage(message)
-        .then((response) => sendResponse(response))
-        .catch((error) =>
-          sendResponse({
-            success: false,
-            error: error instanceof Error ? error.message : "未知错误",
-          }),
-        )
+  // ========== 消息处理器 ==========
 
-      // 返回 true 表示异步响应
-      return true
-    },
-  )
+  onMessage("getConfig", async () => {
+    const config = await getConfig()
+    return { success: true, data: config }
+  })
 
-  /**
-   * 消息路由处理器
-   */
-  async function handleMessage(
-    message: ExtensionMessage,
-  ): Promise<MessageResponse> {
-    try {
-      switch (message.type) {
-        case MessageType.GET_CONFIG: {
-          const config = await getConfig()
-          return { success: true, data: config }
-        }
+  onMessage("saveConfig", async ({ data }) => {
+    await saveConfig(data)
+    // 广播配置更新通知到所有标签页
+    await sendMessage("configUpdated", null, "background")
+    return { success: true }
+  })
 
-        case MessageType.SAVE_CONFIG: {
-          await saveConfig(message.payload)
-          // 广播配置更新通知
-          await notifyConfigUpdate()
-          return { success: true }
-        }
+  onMessage("fetchBalance", async () => {
+    // 获取 yes.vg 的认证 cookie
+    const cookies = await browser.cookies.getAll({
+      domain: "yes.vg",
+    })
 
-        case MessageType.FETCH_BALANCE: {
-          // 获取 yes.vg 的认证 cookie
-          const cookies = await browser.cookies.getAll({
-            domain: "yes.vg",
-          })
-
-          if (!cookies || cookies.length === 0) {
-            return {
-              success: false,
-              error: "请先在浏览器中登录 yes.vg",
-            }
-          }
-
-          // 将所有 cookie 拼接成字符串
-          const cookieString = cookies
-            .map((c) => `${c.name}=${c.value}`)
-            .join("; ")
-
-          const balanceData = await fetchYesCodeBalance(cookieString)
-          return { success: true, data: balanceData }
-        }
-
-        case MessageType.FETCH_CURSOR_USAGE: {
-          // 获取 cursor.com 的认证 cookie
-          const cookies = await browser.cookies.getAll({
-            domain: "cursor.com",
-          })
-
-          if (!cookies || cookies.length === 0) {
-            return {
-              success: false,
-              error: "请先在浏览器中登录 cursor.com",
-            }
-          }
-
-          // 将所有 cookie 拼接成字符串
-          const cookieString = cookies
-            .map((c) => `${c.name}=${c.value}`)
-            .join("; ")
-
-          const usageData = await fetchCursorUsage(cookieString)
-          return { success: true, data: usageData }
-        }
-
-        case MessageType.GET_SEND_COOKIE_CONFIG: {
-          const config = await getSendCookieConfig()
-          return { success: true, data: config }
-        }
-
-        case MessageType.SAVE_SEND_COOKIE_CONFIG: {
-          await saveSendCookieConfig(message.payload)
-          // 重新初始化定时器
-          await initializeCookieTimers()
-          // 广播配置更新通知
-          await notifySendCookieConfigUpdate()
-          return { success: true }
-        }
-
-        case MessageType.GET_MINIMAX_CONFIG: {
-          const config = await getMiniMaxConfig()
-          return { success: true, data: config }
-        }
-
-        case MessageType.SAVE_MINIMAX_CONFIG: {
-          await saveMiniMaxConfig(message.payload)
-          return { success: true }
-        }
-
-        case MessageType.FETCH_MINIMAX_REMAINS: {
-          const config = await getMiniMaxConfig()
-
-          if (!config.apiKey) {
-            return {
-              success: false,
-              error: "请先在设置中配置 MiniMax API Key",
-            }
-          }
-
-          const remainsData = await fetchMiniMaxRemains(config.apiKey)
-          return { success: true, data: remainsData }
-        }
-
-        default: {
-          const unknownMessage = message as { type: string }
-          return {
-            success: false,
-            error: `未知的消息类型: ${unknownMessage.type}`,
-          }
-        }
+    if (!cookies || cookies.length === 0) {
+      return {
+        success: false,
+        error: "请先在浏览器中登录 yes.vg",
       }
-    } catch (error) {
-      console.error("Message handling error:", error)
-      throw error
     }
-  }
 
-  /**
-   * 广播配置更新通知到所有标签页
-   */
-  async function notifyConfigUpdate() {
-    try {
-      const tabs = await browser.tabs.query({})
+    // 将所有 cookie 拼接成字符串
+    const cookieString = cookies
+      .map((c) => `${c.name}=${c.value}`)
+      .join("; ")
 
-      for (const tab of tabs) {
-        if (tab.id) {
-          try {
-            await browser.tabs.sendMessage(tab.id, {
-              type: MessageType.CONFIG_UPDATED,
-            })
-          } catch (error) {
-            // 忽略无法接收消息的标签页（例如 chrome:// 页面）
-            console.debug(`无法通知标签页 ${tab.id}:`, error)
-          }
-        }
+    const balanceData = await fetchYesCodeBalance(cookieString)
+    return { success: true, data: balanceData }
+  })
+
+  onMessage("fetchCursorUsage", async () => {
+    // 获取 cursor.com 的认证 cookie
+    const cookies = await browser.cookies.getAll({
+      domain: "cursor.com",
+    })
+
+    if (!cookies || cookies.length === 0) {
+      return {
+        success: false,
+        error: "请先在浏览器中登录 cursor.com",
       }
-    } catch (error) {
-      console.error("Failed to notify config update:", error)
     }
-  }
 
-  /**
-   * 广播 SendCookie 配置更新通知到所有标签页
-   */
-  async function notifySendCookieConfigUpdate() {
-    try {
-      const tabs = await browser.tabs.query({})
+    // 将所有 cookie 拼接成字符串
+    const cookieString = cookies
+      .map((c) => `${c.name}=${c.value}`)
+      .join("; ")
 
-      for (const tab of tabs) {
-        if (tab.id) {
-          try {
-            await browser.tabs.sendMessage(tab.id, {
-              type: MessageType.SEND_COOKIE_CONFIG_UPDATED,
-            })
-          } catch (error) {
-            // 忽略无法接收消息的标签页（例如 chrome:// 页面）
-            console.debug(`无法通知标签页 ${tab.id}:`, error)
-          }
-        }
+    const usageData = await fetchCursorUsage(cookieString)
+    return { success: true, data: usageData }
+  })
+
+  onMessage("getSendCookieConfig", async () => {
+    const config = await getSendCookieConfig()
+    return { success: true, data: config }
+  })
+
+  onMessage("saveSendCookieConfig", async ({ data }) => {
+    await saveSendCookieConfig(data)
+    // 重新初始化定时器
+    await initializeCookieTimers()
+    // 广播配置更新通知到所有标签页
+    await sendMessage("sendCookieConfigUpdated", null, "background")
+    return { success: true }
+  })
+
+  onMessage("getMiniMaxConfig", async () => {
+    const config = await getMiniMaxConfig()
+    return { success: true, data: config }
+  })
+
+  onMessage("saveMiniMaxConfig", async ({ data }) => {
+    await saveMiniMaxConfig(data)
+    return { success: true }
+  })
+
+  onMessage("fetchMiniMaxRemains", async () => {
+    const config = await getMiniMaxConfig()
+
+    if (!config.apiKey) {
+      return {
+        success: false,
+        error: "请先在设置中配置 MiniMax API Key",
       }
-    } catch (error) {
-      console.error("Failed to notify sendCookie config update:", error)
     }
-  }
+
+    const remainsData = await fetchMiniMaxRemains(config.apiKey)
+    return { success: true, data: remainsData }
+  })
+
+  // ========== Cookie 定时器相关 ==========
 
   /**
    * 发送 cookies 到后端 API
    */
-  async function sendCookiesToBackend(config: SendCookieConfigItem) {
+  async function sendCookiesToBackend(config: {
+    domain: string
+    apiUrl: string
+    interval: number
+    enabled: boolean
+  }) {
     try {
       // 获取指定域名的所有 cookie
       const cookies = await browser.cookies.getAll({
@@ -264,7 +179,12 @@ export default defineBackground(() => {
   /**
    * 为单个配置项创建定时器
    */
-  function createTimerForConfig(config: SendCookieConfigItem) {
+  function createTimerForConfig(config: {
+    domain: string
+    apiUrl: string
+    interval: number
+    enabled: boolean
+  }) {
     // 如果已存在定时器，先清除
     const existingTimer = cookieTimers.get(config.domain)
     if (existingTimer) {

@@ -12,20 +12,14 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer"
 import { Separator } from "@/components/ui/separator"
-import {
-  type Bookmark,
-  type ConfigResponse,
-  MessageType,
-  type SendCookieConfig,
-  type SendCookieConfigResponse,
-  type MiniMaxConfigResponse,
-} from "@/types/messages"
+import { type Bookmark } from "@/types/messages"
 import { BookmarkSettings } from "./BookmarkSettings"
 import { ConfigImportExport } from "./ConfigImportExport"
 import { CursorSettings } from "./CursorSettings"
 import { SendCookieSettings } from "./SendCookieSettings"
 import { YesCodeSettings } from "./YesCodeSettings"
 import { MiniMaxSettings } from "./MiniMaxSettings"
+import { sendMessage } from "webext-bridge/content-script"
 
 export function SettingsDrawer() {
   const [open, setOpen] = useState(false)
@@ -34,24 +28,22 @@ export function SettingsDrawer() {
   const [miniMaxApiKey, setMiniMaxApiKey] = useState("")
   const [showMiniMaxUsage, setShowMiniMaxUsage] = useState(true)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
-  const [sendCookieConfigs, setSendCookieConfigs] = useState<SendCookieConfig>(
-    [],
-  )
+  const [sendCookieConfigs, setSendCookieConfigs] = useState<{
+    id: string
+    domain: string
+    apiUrl: string
+    interval: number
+    enabled: boolean
+  }[]>([])
 
   // Load config using useRequest
   const { refresh: reloadConfig } = useRequest(
     async () => {
       const [configResponse, sendCookieResponse, miniMaxResponse] =
         await Promise.all([
-          browser.runtime.sendMessage({
-            type: MessageType.GET_CONFIG,
-          }) as Promise<ConfigResponse>,
-          browser.runtime.sendMessage({
-            type: MessageType.GET_SEND_COOKIE_CONFIG,
-          }) as Promise<SendCookieConfigResponse>,
-          browser.runtime.sendMessage({
-            type: MessageType.GET_MINIMAX_CONFIG,
-          }) as Promise<MiniMaxConfigResponse>,
+          sendMessage("getConfig", null, "background"),
+          sendMessage("getSendCookieConfig", null, "background"),
+          sendMessage("getMiniMaxConfig", null, "background"),
         ])
 
       if (configResponse.success && configResponse.data) {
@@ -83,25 +75,24 @@ export function SettingsDrawer() {
     async () => {
       const [configResponse, sendCookieResponse, miniMaxResponse] =
         await Promise.all([
-          browser.runtime.sendMessage({
-            type: MessageType.SAVE_CONFIG,
-            payload: {
+          sendMessage(
+            "saveConfig",
+            {
               showBalance,
               showCursorUsage,
               bookmarks,
             },
-          }) as Promise<ConfigResponse>,
-          browser.runtime.sendMessage({
-            type: MessageType.SAVE_SEND_COOKIE_CONFIG,
-            payload: sendCookieConfigs,
-          }) as Promise<SendCookieConfigResponse>,
-          browser.runtime.sendMessage({
-            type: MessageType.SAVE_MINIMAX_CONFIG,
-            payload: {
+            "background",
+          ),
+          sendMessage("saveSendCookieConfig", sendCookieConfigs, "background"),
+          sendMessage(
+            "saveMiniMaxConfig",
+            {
               apiKey: miniMaxApiKey,
               showUsage: showMiniMaxUsage,
             },
-          }) as Promise<MiniMaxConfigResponse>,
+            "background",
+          ),
         ])
 
       if (!configResponse.success) {
