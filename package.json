@@ -13,7 +13,8 @@
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
     "postinstall": "wxt prepare",
-    "lint:fix": "biome check --write ."
+    "lint:fix": "biome check --write .",
+    "type-check": "tsgo --noEmit"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
