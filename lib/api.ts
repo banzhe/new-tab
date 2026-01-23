@@ -1,4 +1,8 @@
-import type { CursorUsageData, YesCodeBalanceData, MiniMaxRemainsData } from "@/types/messages"
+import type {
+  CursorUsageData,
+  MiniMaxRemainsData,
+  YesCodeBalanceData,
+} from "@/types/messages"
 
 // 硬编码的 API 配置
 const YESCODE_API_URL = "https://co.yes.vg/api/v1/user/balance"

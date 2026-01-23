@@ -1,7 +1,7 @@
 import { useRequest } from "ahooks"
 import { useEffect } from "react"
+import { onMessage, sendMessage } from "webext-bridge/content-script"
 import { SmallCard } from "./SmallCard"
-import { sendMessage, onMessage } from "webext-bridge/content-script"
 
 // 格式化 token 数量
 function formatTokens(tokens?: string): string {

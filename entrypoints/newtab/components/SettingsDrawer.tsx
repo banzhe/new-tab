@@ -1,6 +1,7 @@
 import { useRequest } from "ahooks"
 import { Settings } from "lucide-react"
 import { useState } from "react"
+import { sendMessage } from "webext-bridge/content-script"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
@@ -12,14 +13,13 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer"
 import { Separator } from "@/components/ui/separator"
-import { type Bookmark } from "@/types/messages"
+import type { Bookmark } from "@/types/messages"
 import { BookmarkSettings } from "./BookmarkSettings"
 import { ConfigImportExport } from "./ConfigImportExport"
 import { CursorSettings } from "./CursorSettings"
+import { MiniMaxSettings } from "./MiniMaxSettings"
 import { SendCookieSettings } from "./SendCookieSettings"
 import { YesCodeSettings } from "./YesCodeSettings"
-import { MiniMaxSettings } from "./MiniMaxSettings"
-import { sendMessage } from "webext-bridge/content-script"
 
 export function SettingsDrawer() {
   const [open, setOpen] = useState(false)
@@ -28,13 +28,15 @@ export function SettingsDrawer() {
   const [miniMaxApiKey, setMiniMaxApiKey] = useState("")
   const [showMiniMaxUsage, setShowMiniMaxUsage] = useState(true)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
-  const [sendCookieConfigs, setSendCookieConfigs] = useState<{
-    id: string
-    domain: string
-    apiUrl: string
-    interval: number
-    enabled: boolean
-  }[]>([])
+  const [sendCookieConfigs, setSendCookieConfigs] = useState<
+    {
+      id: string
+      domain: string
+      apiUrl: string
+      interval: number
+      enabled: boolean
+    }[]
+  >([])
 
   // Load config using useRequest
   const { refresh: reloadConfig } = useRequest(

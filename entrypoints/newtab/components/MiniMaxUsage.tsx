@@ -1,8 +1,8 @@
 import { useRequest } from "ahooks"
 import { useEffect } from "react"
+import { onMessage, sendMessage } from "webext-bridge/content-script"
 import { Progress } from "@/components/ui/progress"
 import { SmallCard } from "./SmallCard"
-import { sendMessage, onMessage } from "webext-bridge/content-script"
 
 function formatTime(ms: number): string {
   if (ms <= 0) return "即将重置"
@@ -39,8 +39,7 @@ interface ModelRemainCardProps {
 function ModelRemainCard({ model }: ModelRemainCardProps) {
   const remaining = model.current_interval_usage_count
   const total = model.current_interval_total_count
-  const usagePercent =
-    total > 0 ? ((total - remaining) / total) * 100 : 0
+  const usagePercent = total > 0 ? ((total - remaining) / total) * 100 : 0
 
   const startDate = new Date(model.start_time)
   const endDate = new Date(model.end_time)
@@ -51,7 +50,9 @@ function ModelRemainCard({ model }: ModelRemainCardProps) {
       <div className="space-y-1">
         <h4 className="font-medium text-sm">{model.model_name}</h4>
         <p className="text-lg font-medium">{periodText}</p>
-        <p className="text-xs text-muted-foreground">{formatTime(model.remains_time)}</p>
+        <p className="text-xs text-muted-foreground">
+          {formatTime(model.remains_time)}
+        </p>
       </div>
 
       <Progress value={usagePercent} className="h-2" />
@@ -73,7 +74,11 @@ export function MiniMaxUsage() {
     refresh: fetchRemains,
   } = useRequest(
     async () => {
-      const response = await sendMessage("fetchMiniMaxRemains", null, "background")
+      const response = await sendMessage(
+        "fetchMiniMaxRemains",
+        null,
+        "background",
+      )
 
       if (response.success && response.data) {
         return response.data
@@ -111,8 +116,8 @@ export function MiniMaxUsage() {
         {remainsData.model_remains.length === 0 ? (
           <p className="text-muted-foreground text-center">暂无用量数据</p>
         ) : (
-          remainsData.model_remains.map((model, index) => (
-            <ModelRemainCard key={index} model={model} />
+          remainsData.model_remains.map((model) => (
+            <ModelRemainCard key={model.model_name} model={model} />
           ))
         )}
       </div>

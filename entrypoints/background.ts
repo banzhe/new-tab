@@ -1,11 +1,15 @@
-import { fetchCursorUsage, fetchYesCodeBalance, fetchMiniMaxRemains } from "@/lib/api"
+import {
+  fetchCursorUsage,
+  fetchMiniMaxRemains,
+  fetchYesCodeBalance,
+} from "@/lib/api"
 import {
   getConfig,
+  getMiniMaxConfig,
   getSendCookieConfig,
   saveConfig,
-  saveSendCookieConfig,
-  getMiniMaxConfig,
   saveMiniMaxConfig,
+  saveSendCookieConfig,
 } from "@/lib/storage"
 
 // 初始化 webext-bridge，必须在其他导入之前
@@ -55,9 +59,7 @@ export default defineBackground(() => {
     }
 
     // 将所有 cookie 拼接成字符串
-    const cookieString = cookies
-      .map((c) => `${c.name}=${c.value}`)
-      .join("; ")
+    const cookieString = cookies.map((c) => `${c.name}=${c.value}`).join("; ")
 
     const balanceData = await fetchYesCodeBalance(cookieString)
     return { success: true, data: balanceData }
@@ -77,9 +79,7 @@ export default defineBackground(() => {
     }
 
     // 将所有 cookie 拼接成字符串
-    const cookieString = cookies
-      .map((c) => `${c.name}=${c.value}`)
-      .join("; ")
+    const cookieString = cookies.map((c) => `${c.name}=${c.value}`).join("; ")
 
     const usageData = await fetchCursorUsage(cookieString)
     return { success: true, data: usageData }

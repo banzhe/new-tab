@@ -1,8 +1,8 @@
 import { useRequest } from "ahooks"
 import { useEffect } from "react"
+import { onMessage, sendMessage } from "webext-bridge/content-script"
 import { Progress } from "@/components/ui/progress"
 import { SmallCard } from "./SmallCard"
-import { sendMessage, onMessage } from "webext-bridge/content-script"
 
 export function YesCodeBalance() {
   const cardTitle = "YesCode 余额统计"

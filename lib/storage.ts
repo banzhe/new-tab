@@ -1,5 +1,9 @@
 import { storage } from "#imports"
-import type { SendCookieConfig, YesCodeConfig, MiniMaxConfig } from "@/types/messages"
+import type {
+  MiniMaxConfig,
+  SendCookieConfig,
+  YesCodeConfig,
+} from "@/types/messages"
 
 // 定义 YesCode 配置存储项
 export const yesCodeConfig = storage.defineItem<YesCodeConfig>(

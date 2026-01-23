@@ -57,11 +57,7 @@ export function validateConfig(data: unknown): ValidationResult {
   const config = data as Record<string, unknown>
 
   // 2. 必需字段检查
-  const requiredFields = [
-    "showBalance",
-    "showCursorUsage",
-    "bookmarks",
-  ]
+  const requiredFields = ["showBalance", "showCursorUsage", "bookmarks"]
   for (const field of requiredFields) {
     if (!(field in config)) {
       return { valid: false, error: `缺少必需字段: ${field}` }

@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react"
-import { type Bookmark } from "@/types/messages"
+import { onMessage, sendMessage } from "webext-bridge/content-script"
+import type { Bookmark } from "@/types/messages"
 import { BookmarkGrid } from "./components/BookmarkGrid"
 import { CursorUsage } from "./components/CursorUsage"
+import { MiniMaxUsage } from "./components/MiniMaxUsage"
 import { SearchBar } from "./components/SearchBar"
 import { SettingsDrawer } from "./components/SettingsDrawer"
 import { YesCodeBalance } from "./components/YesCodeBalance"
-import { MiniMaxUsage } from "./components/MiniMaxUsage"
-import { sendMessage, onMessage } from "webext-bridge/content-script"
 
 function App() {
   const [showBalance, setShowBalance] = useState(true)

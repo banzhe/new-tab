@@ -17,7 +17,10 @@ declare module "webext-bridge" {
     configUpdated: null
 
     // SendCookie 配置相关
-    getSendCookieConfig: ProtocolWithReturn<null, MessageResponse<SendCookieConfig>>
+    getSendCookieConfig: ProtocolWithReturn<
+      null,
+      MessageResponse<SendCookieConfig>
+    >
     saveSendCookieConfig: ProtocolWithReturn<SendCookieConfig, MessageResponse>
     sendCookieConfigUpdated: null
 
@@ -30,6 +33,9 @@ declare module "webext-bridge" {
     // MiniMax 相关
     getMiniMaxConfig: ProtocolWithReturn<null, MessageResponse<MiniMaxConfig>>
     saveMiniMaxConfig: ProtocolWithReturn<MiniMaxConfig, MessageResponse>
-    fetchMiniMaxRemains: ProtocolWithReturn<null, MessageResponse<MiniMaxRemainsData>>
+    fetchMiniMaxRemains: ProtocolWithReturn<
+      null,
+      MessageResponse<MiniMaxRemainsData>
+    >
   }
 }
