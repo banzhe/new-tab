@@ -18,5 +18,8 @@ export default defineConfig({
         "@": path.resolve(__dirname, "./"), // or "./src" if using src directory
       },
     },
+    build: {
+      sourcemap: true,
+    },
   }),
 })
