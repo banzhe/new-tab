@@ -9,9 +9,9 @@ import { SettingsDrawer } from "./components/SettingsDrawer"
 import { YesCodeBalance } from "./components/YesCodeBalance"
 
 function App() {
-  const [showBalance, setShowBalance] = useState(true)
-  const [showCursorUsage, setShowCursorUsage] = useState(true)
-  const [showMiniMaxUsage, setShowMiniMaxUsage] = useState(true)
+  const [showBalance, setShowBalance] = useState(false)
+  const [showCursorUsage, setShowCursorUsage] = useState(false)
+  const [showMiniMaxUsage, setShowMiniMaxUsage] = useState(false)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
 
   useEffect(() => {

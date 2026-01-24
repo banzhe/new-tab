@@ -10,8 +10,8 @@ export const yesCodeConfig = storage.defineItem<YesCodeConfig>(
   "local:yesCodeConfig",
   {
     fallback: {
-      showBalance: true,
-      showCursorUsage: true,
+      showBalance: false,
+      showCursorUsage: false,
       bookmarks: [],
     },
   },
@@ -31,7 +31,7 @@ export const miniMaxConfig = storage.defineItem<MiniMaxConfig>(
   {
     fallback: {
       apiKey: "",
-      showUsage: true,
+      showUsage: false,
     },
   },
 )

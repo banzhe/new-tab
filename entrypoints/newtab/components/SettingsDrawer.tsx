@@ -23,10 +23,10 @@ import { YesCodeSettings } from "./YesCodeSettings"
 
 export function SettingsDrawer() {
   const [open, setOpen] = useState(false)
-  const [showBalance, setShowBalance] = useState(true)
-  const [showCursorUsage, setShowCursorUsage] = useState(true)
+  const [showBalance, setShowBalance] = useState(false)
+  const [showCursorUsage, setShowCursorUsage] = useState(false)
   const [miniMaxApiKey, setMiniMaxApiKey] = useState("")
-  const [showMiniMaxUsage, setShowMiniMaxUsage] = useState(true)
+  const [showMiniMaxUsage, setShowMiniMaxUsage] = useState(false)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [sendCookieConfigs, setSendCookieConfigs] = useState<
     {
