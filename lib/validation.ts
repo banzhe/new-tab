@@ -1,14 +1,11 @@
-import type { Bookmark, YesCodeConfig } from "@/types/messages"
+import type { AppConfig, Bookmark } from "@/types/messages"
 
 export interface ValidationResult {
   valid: boolean
   error?: string
-  sanitized?: YesCodeConfig
+  sanitized?: AppConfig
 }
 
-/**
- * 验证书签对象格式是否正确
- */
 function isValidBookmark(data: unknown): data is Bookmark {
   if (!data || typeof data !== "object") return false
   const b = data as Record<string, unknown>
@@ -20,16 +17,11 @@ function isValidBookmark(data: unknown): data is Bookmark {
   )
 }
 
-/**
- * 清洗书签数据，确保数据完整性
- */
 function sanitizeBookmark(bookmark: unknown): Bookmark {
   const b = bookmark as Record<string, unknown>
 
-  // Validate favicon is either undefined or valid data URL
   let favicon: string | undefined
   if (b.favicon && typeof b.favicon === "string") {
-    // Only keep if it's a data URL
     if (b.favicon.startsWith("data:image/")) {
       favicon = b.favicon
     }
@@ -39,57 +31,61 @@ function sanitizeBookmark(bookmark: unknown): Bookmark {
     id: String(b.id || crypto.randomUUID()),
     title: String(b.title || ""),
     url: String(b.url || ""),
-    ...(favicon && { favicon }), // Only include if exists
+    ...(favicon && { favicon }),
   }
 }
 
-/**
- * 验证配置对象是否符合 YesCodeConfig 格式
- * @param data - 待验证的数据
- * @returns 验证结果，包含是否有效、错误信息和清洗后的数据
- */
 export function validateConfig(data: unknown): ValidationResult {
-  // 1. 类型检查
   if (!data || typeof data !== "object") {
     return { valid: false, error: "配置数据格式错误" }
   }
 
   const config = data as Record<string, unknown>
 
-  // 2. 必需字段检查
-  const requiredFields = ["showBalance", "showCursorUsage", "bookmarks"]
+  const requiredFields = ["yesCode", "cursorSettings", "bookmarks"]
   for (const field of requiredFields) {
     if (!(field in config)) {
       return { valid: false, error: `缺少必需字段: ${field}` }
     }
   }
 
-  // 3. 字段类型验证
-  if (typeof config.showBalance !== "boolean") {
-    return { valid: false, error: "showBalance 必须是布尔值" }
+  const yesCode = config.yesCode as Record<string, unknown>
+  if (!yesCode || typeof yesCode !== "object") {
+    return { valid: false, error: "yesCode 格式错误" }
+  }
+  if (typeof yesCode.showUsage !== "boolean") {
+    return { valid: false, error: "yesCode.showUsage 必须是布尔值" }
   }
 
-  if (typeof config.showCursorUsage !== "boolean") {
-    return { valid: false, error: "showCursorUsage 必须是布尔值" }
+  const cursorSettings = config.cursorSettings as Record<string, unknown>
+  if (!cursorSettings || typeof cursorSettings !== "object") {
+    return { valid: false, error: "cursorSettings 格式错误" }
+  }
+  if (typeof cursorSettings.showUsage !== "boolean") {
+    return { valid: false, error: "cursorSettings.showUsage 必须是布尔值" }
   }
 
-  if (!Array.isArray(config.bookmarks)) {
-    return { valid: false, error: "bookmarks 必须是数组" }
+  const bookmarks = config.bookmarks as Record<string, unknown>
+  if (!bookmarks || typeof bookmarks !== "object") {
+    return { valid: false, error: "bookmarks 格式错误" }
+  }
+  if (!Array.isArray(bookmarks.items)) {
+    return { valid: false, error: "bookmarks.items 必须是数组" }
   }
 
-  // 4. 书签格式验证
-  for (let i = 0; i < config.bookmarks.length; i++) {
-    const bookmark = config.bookmarks[i]
+  for (let i = 0; i < bookmarks.items.length; i++) {
+    const bookmark = bookmarks.items[i]
     if (!isValidBookmark(bookmark)) {
       return { valid: false, error: `书签 ${i + 1} 格式错误` }
     }
   }
 
-  // 5. 数据清洗 - 移除未知字段，确保类型正确
-  const sanitized: YesCodeConfig = {
-    showBalance: Boolean(config.showBalance),
-    showCursorUsage: Boolean(config.showCursorUsage),
-    bookmarks: config.bookmarks.map(sanitizeBookmark),
+  const sanitized: AppConfig = {
+    yesCode: { showUsage: Boolean(yesCode.showUsage) },
+    cursorSettings: { showUsage: Boolean(cursorSettings.showUsage) },
+    bookmarks: { items: bookmarks.items.map(sanitizeBookmark) },
+    sendCookie: [],
+    miniMax: { apiKey: "", showUsage: false },
   }
 
   return { valid: true, sanitized }

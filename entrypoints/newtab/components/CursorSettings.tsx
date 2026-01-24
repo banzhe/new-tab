@@ -9,13 +9,13 @@ import {
 import { Switch } from "@/components/ui/switch"
 
 interface CursorSettingsProps {
-  showCursorUsage: boolean
-  onShowCursorUsageChange: (value: boolean) => void
+  showUsage: boolean
+  onShowUsageChange: (value: boolean) => void
 }
 
 export function CursorSettings({
-  showCursorUsage,
-  onShowCursorUsageChange,
+  showUsage,
+  onShowUsageChange,
 }: CursorSettingsProps) {
   return (
     <FieldSet>
@@ -23,12 +23,12 @@ export function CursorSettings({
       <FieldGroup>
         <Field orientation="horizontal">
           <FieldContent>
-            <FieldLabel htmlFor="showCursorUsage">显示每月用量</FieldLabel>
+            <FieldLabel htmlFor="showUsage">显示每月用量</FieldLabel>
           </FieldContent>
           <Switch
-            id="showCursorUsage"
-            checked={showCursorUsage}
-            onCheckedChange={onShowCursorUsageChange}
+            id="showUsage"
+            checked={showUsage}
+            onCheckedChange={onShowUsageChange}
           />
         </Field>
       </FieldGroup>

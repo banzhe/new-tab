@@ -9,13 +9,13 @@ import {
 import { Switch } from "@/components/ui/switch"
 
 interface YesCodeSettingsProps {
-  showBalance: boolean
-  onShowBalanceChange: (value: boolean) => void
+  showUsage: boolean
+  onShowUsageChange: (value: boolean) => void
 }
 
 export function YesCodeSettings({
-  showBalance,
-  onShowBalanceChange,
+  showUsage,
+  onShowUsageChange,
 }: YesCodeSettingsProps) {
   return (
     <FieldSet>
@@ -23,12 +23,12 @@ export function YesCodeSettings({
       <FieldGroup>
         <Field orientation="horizontal">
           <FieldContent>
-            <FieldLabel htmlFor="showBalance">开启</FieldLabel>
+            <FieldLabel htmlFor="showUsage">开启</FieldLabel>
           </FieldContent>
           <Switch
-            id="showBalance"
-            checked={showBalance}
-            onCheckedChange={onShowBalanceChange}
+            id="showUsage"
+            checked={showUsage}
+            onCheckedChange={onShowUsageChange}
           />
         </Field>
       </FieldGroup>

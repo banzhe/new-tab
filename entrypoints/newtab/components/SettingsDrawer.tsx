@@ -1,7 +1,7 @@
 import { useRequest } from "ahooks"
 import { Settings } from "lucide-react"
 import { useState } from "react"
-import { sendMessage } from "webext-bridge/content-script"
+import { sendMessage } from "webext-bridge/options"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
@@ -23,7 +23,7 @@ import { YesCodeSettings } from "./YesCodeSettings"
 
 export function SettingsDrawer() {
   const [open, setOpen] = useState(false)
-  const [showBalance, setShowBalance] = useState(false)
+  const [showYesCodeUsage, setShowYesCodeUsage] = useState(false)
   const [showCursorUsage, setShowCursorUsage] = useState(false)
   const [miniMaxApiKey, setMiniMaxApiKey] = useState("")
   const [showMiniMaxUsage, setShowMiniMaxUsage] = useState(false)
@@ -38,32 +38,21 @@ export function SettingsDrawer() {
     }[]
   >([])
 
-  // Load config using useRequest
-  const { refresh: reloadConfig } = useRequest(
+  const { refresh: reloadConfig, loading: loadingConfig } = useRequest(
     async () => {
-      const [configResponse, sendCookieResponse, miniMaxResponse] =
-        await Promise.all([
-          sendMessage("getConfig", null, "background"),
-          sendMessage("getSendCookieConfig", null, "background"),
-          sendMessage("getMiniMaxConfig", null, "background"),
-        ])
+      const response = await sendMessage("getAppConfig", null, "background")
 
-      if (configResponse.success && configResponse.data) {
-        setShowBalance(configResponse.data.showBalance)
-        setShowCursorUsage(configResponse.data.showCursorUsage)
-        setBookmarks(configResponse.data.bookmarks || [])
+      if (response.success && response.data) {
+        const config = response.data
+        setShowYesCodeUsage(config.yesCode.showUsage)
+        setShowCursorUsage(config.cursorSettings.showUsage)
+        setBookmarks(config.bookmarks.items || [])
+        setMiniMaxApiKey(config.miniMax.apiKey)
+        setShowMiniMaxUsage(config.miniMax.showUsage)
+        setSendCookieConfigs(config.sendCookie || [])
       }
 
-      if (sendCookieResponse.success && sendCookieResponse.data) {
-        setSendCookieConfigs(sendCookieResponse.data)
-      }
-
-      if (miniMaxResponse.success && miniMaxResponse.data) {
-        setMiniMaxApiKey(miniMaxResponse.data.apiKey)
-        setShowMiniMaxUsage(miniMaxResponse.data.showUsage)
-      }
-
-      return { configResponse, sendCookieResponse, miniMaxResponse }
+      return response
     },
     {
       onError: (error) => {
@@ -72,53 +61,30 @@ export function SettingsDrawer() {
     },
   )
 
-  // Save config using useRequest
   const { loading: saving, run: saveConfig } = useRequest(
     async () => {
-      const [configResponse, sendCookieResponse, miniMaxResponse] =
-        await Promise.all([
-          sendMessage(
-            "saveConfig",
-            {
-              showBalance,
-              showCursorUsage,
-              bookmarks,
-            },
-            "background",
-          ),
-          sendMessage("saveSendCookieConfig", sendCookieConfigs, "background"),
-          sendMessage(
-            "saveMiniMaxConfig",
-            {
-              apiKey: miniMaxApiKey,
-              showUsage: showMiniMaxUsage,
-            },
-            "background",
-          ),
-        ])
+      const response = await sendMessage(
+        "saveAppConfig",
+        {
+          yesCode: { showUsage: showYesCodeUsage },
+          cursorSettings: { showUsage: showCursorUsage },
+          bookmarks: { items: bookmarks },
+          sendCookie: sendCookieConfigs,
+          miniMax: {
+            apiKey: miniMaxApiKey,
+            showUsage: showMiniMaxUsage,
+          },
+        },
+        "background",
+      )
 
-      if (!configResponse.success) {
-        throw new Error(configResponse.error || "Failed to save config")
+      if (!response.success) {
+        throw new Error(response.error || "Failed to save config")
       }
 
-      if (!sendCookieResponse.success) {
-        throw new Error(
-          sendCookieResponse.error || "Failed to save sendCookie config",
-        )
-      }
+      setOpen(false)
 
-      if (!miniMaxResponse.success) {
-        throw new Error(
-          miniMaxResponse.error || "Failed to save MiniMax config",
-        )
-      }
-
-      if (configResponse.success && sendCookieResponse.success) {
-        setOpen(false)
-        // Background script will automatically broadcast update notification
-      }
-
-      return { configResponse, sendCookieResponse, miniMaxResponse }
+      return response
     },
     {
       manual: true,
@@ -129,13 +95,11 @@ export function SettingsDrawer() {
   )
 
   const handleCancel = () => {
-    // Reload settings from background script
     reloadConfig()
   }
 
   return (
     <Drawer direction="right" open={open} onOpenChange={setOpen}>
-      {/* Trigger button - fixed top-right */}
       <DrawerTrigger asChild>
         <Button
           variant="ghost"
@@ -148,21 +112,19 @@ export function SettingsDrawer() {
       </DrawerTrigger>
 
       <DrawerContent>
-        {/* Header with close button */}
         <DrawerHeader>
           <DrawerTitle>设置</DrawerTitle>
         </DrawerHeader>
 
-        {/* Scrollable content area */}
         <div className="flex-1 space-y-6 overflow-y-auto p-4">
           <YesCodeSettings
-            showBalance={showBalance}
-            onShowBalanceChange={setShowBalance}
+            showUsage={showYesCodeUsage}
+            onShowUsageChange={setShowYesCodeUsage}
           />
 
           <CursorSettings
-            showCursorUsage={showCursorUsage}
-            onShowCursorUsageChange={setShowCursorUsage}
+            showUsage={showCursorUsage}
+            onShowUsageChange={setShowCursorUsage}
           />
 
           <MiniMaxSettings
@@ -172,10 +134,7 @@ export function SettingsDrawer() {
             onShowUsageChange={setShowMiniMaxUsage}
           />
 
-          <BookmarkSettings
-            bookmarks={bookmarks}
-            onBookmarksChange={setBookmarks}
-          />
+          <BookmarkSettings items={bookmarks} onItemsChange={setBookmarks} />
 
           <SendCookieSettings
             configs={sendCookieConfigs}
@@ -183,26 +142,33 @@ export function SettingsDrawer() {
           />
         </div>
 
-        {/* Import/Export section */}
         <Separator />
         <div className="p-4">
           <ConfigImportExport
             currentConfig={{
-              showBalance,
-              showCursorUsage,
-              bookmarks,
+              yesCode: { showUsage: showYesCodeUsage },
+              cursorSettings: { showUsage: showCursorUsage },
+              bookmarks: { items: bookmarks },
+              sendCookie: sendCookieConfigs,
+              miniMax: {
+                apiKey: miniMaxApiKey,
+                showUsage: showMiniMaxUsage,
+              },
             }}
             onImport={(config) => {
-              setShowBalance(config.showBalance)
-              setShowCursorUsage(config.showCursorUsage)
-              setBookmarks(config.bookmarks)
+              setShowYesCodeUsage(config.yesCode.showUsage)
+              setShowCursorUsage(config.cursorSettings.showUsage)
+              setBookmarks(config.bookmarks.items)
             }}
           />
         </div>
 
-        {/* Footer with actions */}
         <DrawerFooter className="border-t">
-          <Button className="w-full" onClick={saveConfig} disabled={saving}>
+          <Button
+            className="w-full"
+            onClick={saveConfig}
+            disabled={saving || loadingConfig}
+          >
             {saving ? "保存中..." : "保存设置"}
           </Button>
           <DrawerClose asChild>

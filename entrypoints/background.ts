@@ -3,26 +3,16 @@ import {
   fetchMiniMaxRemains,
   fetchYesCodeBalance,
 } from "@/lib/api"
-import {
-  getConfig,
-  getMiniMaxConfig,
-  getSendCookieConfig,
-  saveConfig,
-  saveMiniMaxConfig,
-  saveSendCookieConfig,
-} from "@/lib/storage"
+import { getAppConfig, saveAppConfig } from "@/lib/storage"
 
-// 初始化 webext-bridge，必须在其他导入之前
 import "webext-bridge/background"
 import { onMessage, sendMessage } from "webext-bridge/background"
 
 export default defineBackground(() => {
   console.log("Background script initialized", { id: browser.runtime.id })
 
-  // 定时器管理：使用 Map 存储每个配置项的定时器 ID
   const cookieTimers = new Map<string, number>()
 
-  // 初始化定时器（异步执行，不阻塞）
   ;(async () => {
     try {
       await initializeCookieTimers()
@@ -31,22 +21,19 @@ export default defineBackground(() => {
     }
   })()
 
-  // ========== 消息处理器 ==========
-
-  onMessage("getConfig", async () => {
-    const config = await getConfig()
+  onMessage("getAppConfig", async () => {
+    const config = await getAppConfig()
     return { success: true, data: config }
   })
 
-  onMessage("saveConfig", async ({ data }) => {
-    await saveConfig(data)
-    // 广播配置更新通知到所有标签页
-    await sendMessage("configUpdated", null, "background")
+  onMessage("saveAppConfig", async ({ data }) => {
+    await saveAppConfig(data)
+    await sendMessage("appConfigUpdated", null, "options")
+    await initializeCookieTimers()
     return { success: true }
   })
 
   onMessage("fetchBalance", async () => {
-    // 获取 yes.vg 的认证 cookie
     const cookies = await browser.cookies.getAll({
       domain: "yes.vg",
     })
@@ -58,7 +45,6 @@ export default defineBackground(() => {
       }
     }
 
-    // 将所有 cookie 拼接成字符串
     const cookieString = cookies.map((c) => `${c.name}=${c.value}`).join("; ")
 
     const balanceData = await fetchYesCodeBalance(cookieString)
@@ -66,7 +52,6 @@ export default defineBackground(() => {
   })
 
   onMessage("fetchCursorUsage", async () => {
-    // 获取 cursor.com 的认证 cookie
     const cookies = await browser.cookies.getAll({
       domain: "cursor.com",
     })
@@ -78,56 +63,26 @@ export default defineBackground(() => {
       }
     }
 
-    // 将所有 cookie 拼接成字符串
     const cookieString = cookies.map((c) => `${c.name}=${c.value}`).join("; ")
 
     const usageData = await fetchCursorUsage(cookieString)
     return { success: true, data: usageData }
   })
 
-  onMessage("getSendCookieConfig", async () => {
-    const config = await getSendCookieConfig()
-    return { success: true, data: config }
-  })
-
-  onMessage("saveSendCookieConfig", async ({ data }) => {
-    await saveSendCookieConfig(data)
-    // 重新初始化定时器
-    await initializeCookieTimers()
-    // 广播配置更新通知到所有标签页
-    await sendMessage("sendCookieConfigUpdated", null, "background")
-    return { success: true }
-  })
-
-  onMessage("getMiniMaxConfig", async () => {
-    const config = await getMiniMaxConfig()
-    return { success: true, data: config }
-  })
-
-  onMessage("saveMiniMaxConfig", async ({ data }) => {
-    await saveMiniMaxConfig(data)
-    return { success: true }
-  })
-
   onMessage("fetchMiniMaxRemains", async () => {
-    const config = await getMiniMaxConfig()
+    const config = await getAppConfig()
 
-    if (!config.apiKey) {
+    if (!config.miniMax.apiKey) {
       return {
         success: false,
         error: "请先在设置中配置 MiniMax API Key",
       }
     }
 
-    const remainsData = await fetchMiniMaxRemains(config.apiKey)
+    const remainsData = await fetchMiniMaxRemains(config.miniMax.apiKey)
     return { success: true, data: remainsData }
   })
 
-  // ========== Cookie 定时器相关 ==========
-
-  /**
-   * 发送 cookies 到后端 API
-   */
   async function sendCookiesToBackend(config: {
     domain: string
     apiUrl: string
@@ -135,7 +90,6 @@ export default defineBackground(() => {
     enabled: boolean
   }) {
     try {
-      // 获取指定域名的所有 cookie
       const cookies = await browser.cookies.getAll({
         domain: config.domain,
       })
@@ -145,14 +99,12 @@ export default defineBackground(() => {
         return
       }
 
-      // 转换为 { name, value, domain } 格式
       const cookieData = cookies.map((c) => ({
         name: c.name,
         value: c.value,
         domain: c.domain,
       }))
 
-      // 发送 POST 请求到后端
       const response = await fetch(config.apiUrl, {
         method: "POST",
         headers: {
@@ -176,57 +128,43 @@ export default defineBackground(() => {
     }
   }
 
-  /**
-   * 为单个配置项创建定时器
-   */
   function createTimerForConfig(config: {
     domain: string
     apiUrl: string
     interval: number
     enabled: boolean
   }) {
-    // 如果已存在定时器，先清除
     const existingTimer = cookieTimers.get(config.domain)
     if (existingTimer) {
       clearTimeout(existingTimer)
     }
 
-    // 如果未启用，不创建定时器
     if (!config.enabled) {
       return
     }
 
-    // 创建定时器函数
     const scheduleNext = () => {
-      // 立即执行一次
       sendCookiesToBackend(config)
 
-      // 设置下次执行
       const timerId = setTimeout(scheduleNext, config.interval)
       cookieTimers.set(config.domain, timerId as unknown as number)
     }
 
-    // 启动定时器
     scheduleNext()
   }
 
-  /**
-   * 初始化所有 cookie 定时器
-   */
   async function initializeCookieTimers() {
-    // 清除所有现有定时器
     for (const timerId of cookieTimers.values()) {
       clearTimeout(timerId)
     }
     cookieTimers.clear()
 
-    // 读取配置
-    const configs = await getSendCookieConfig()
+    const config = await getAppConfig()
+    const configs = config.sendCookie
 
-    // 为每个启用的配置项创建定时器
-    for (const config of configs) {
-      if (config.enabled) {
-        createTimerForConfig(config)
+    for (const c of configs) {
+      if (c.enabled) {
+        createTimerForConfig(c)
       }
     }
 

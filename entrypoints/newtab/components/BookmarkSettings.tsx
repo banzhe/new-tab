@@ -6,13 +6,13 @@ import { fetchFaviconAsDataUrl, isValidUrl } from "@/lib/favicon"
 import type { Bookmark } from "@/types/messages"
 
 interface BookmarkSettingsProps {
-  bookmarks: Bookmark[]
-  onBookmarksChange: (bookmarks: Bookmark[]) => void
+  items: Bookmark[]
+  onItemsChange: (items: Bookmark[]) => void
 }
 
 export function BookmarkSettings({
-  bookmarks,
-  onBookmarksChange,
+  items,
+  onItemsChange,
 }: BookmarkSettingsProps) {
   const addBookmark = () => {
     const newBookmark: Bookmark = {
@@ -20,17 +20,17 @@ export function BookmarkSettings({
       title: "",
       url: "",
     }
-    onBookmarksChange([...bookmarks, newBookmark])
+    onItemsChange([...items, newBookmark])
   }
 
   const updateBookmark = (id: string, field: keyof Bookmark, value: string) => {
-    onBookmarksChange(
-      bookmarks.map((b) => (b.id === id ? { ...b, [field]: value } : b)),
+    onItemsChange(
+      items.map((b) => (b.id === id ? { ...b, [field]: value } : b)),
     )
   }
 
   const removeBookmark = (id: string) => {
-    onBookmarksChange(bookmarks.filter((b) => b.id !== id))
+    onItemsChange(items.filter((b) => b.id !== id))
   }
 
   const fetchFavicon = async (id: string, url: string) => {
@@ -38,10 +38,8 @@ export function BookmarkSettings({
 
     try {
       const faviconData = await fetchFaviconAsDataUrl(url)
-      onBookmarksChange(
-        bookmarks.map((b) =>
-          b.id === id ? { ...b, favicon: faviconData } : b,
-        ),
+      onItemsChange(
+        items.map((b) => (b.id === id ? { ...b, favicon: faviconData } : b)),
       )
     } catch (error) {
       console.error("Failed to fetch favicon:", error)
@@ -53,7 +51,7 @@ export function BookmarkSettings({
     <FieldSet>
       <FieldLegend>快捷书签</FieldLegend>
       <FieldGroup>
-        {bookmarks.map((bookmark) => (
+        {items.map((bookmark) => (
           <div key={bookmark.id} className="flex items-center gap-2">
             <Input
               value={bookmark.title}

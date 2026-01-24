@@ -10,11 +10,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { validateConfig } from "@/lib/validation"
-import type { YesCodeConfig } from "@/types/messages"
+import type { AppConfig } from "@/types/messages"
 
 interface ConfigImportExportProps {
-  currentConfig: YesCodeConfig
-  onImport: (config: YesCodeConfig) => void
+  currentConfig: AppConfig
+  onImport: (config: AppConfig) => void
 }
 
 export function ConfigImportExport({
@@ -22,46 +22,33 @@ export function ConfigImportExport({
   onImport,
 }: ConfigImportExportProps) {
   const [showPreview, setShowPreview] = useState(false)
-  const [importData, setImportData] = useState<YesCodeConfig | null>(null)
+  const [importData, setImportData] = useState<AppConfig | null>(null)
   const [error, setError] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  /**
-   * 处理配置导出
-   */
   const handleExport = () => {
-    // 生成 JSON 字符串
     const json = JSON.stringify(currentConfig, null, 2)
     const blob = new Blob([json], { type: "application/json" })
     const url = URL.createObjectURL(blob)
 
-    // 创建隐藏的下载链接
     const a = document.createElement("a")
     a.href = url
     a.download = `tab-config-${new Date().toISOString().split("T")[0]}.json`
     a.click()
 
-    // 清理 URL 对象
     URL.revokeObjectURL(url)
   }
 
-  /**
-   * 触发文件选择对话框
-   */
   const handleImport = () => {
     fileInputRef.current?.click()
   }
 
-  /**
-   * 处理文件选择
-   */
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
     setError("")
 
-    // 文件大小限制 (1MB)
     if (file.size > 1024 * 1024) {
       setError("文件过大，最大支持 1MB")
       return
@@ -74,16 +61,13 @@ export function ConfigImportExport({
         const content = event.target?.result as string
         const parsed = JSON.parse(content)
 
-        // 验证配置格式
         const result = validateConfig(parsed)
-        if (!result.valid) {
+        if (!result.valid || !result.sanitized) {
           setError(result.error || "配置验证失败")
           return
         }
 
-        // 显示预览对话框
-        // biome-ignore lint/style/noNonNullAssertion: result is valid
-        setImportData(result.sanitized!)
+        setImportData(result.sanitized)
         setShowPreview(true)
       } catch {
         setError("文件格式错误，请选择有效的 JSON 文件")
@@ -96,13 +80,9 @@ export function ConfigImportExport({
 
     reader.readAsText(file)
 
-    // 重置 input 以允许重复选择同一文件
     e.target.value = ""
   }
 
-  /**
-   * 确认导入配置
-   */
   const handleConfirmImport = () => {
     if (importData) {
       onImport(importData)
@@ -158,7 +138,6 @@ export function ConfigImportExport({
         )}
       </div>
 
-      {/* 预览对话框 */}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent>
           <DialogHeader>
@@ -169,16 +148,16 @@ export function ConfigImportExport({
           {importData && (
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">显示余额:</span>
-                <span>{importData.showBalance ? "✓" : "✗"}</span>
+                <span className="text-muted-foreground">YesCode 显示:</span>
+                <span>{importData.yesCode.showUsage ? "✓" : "✗"}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">显示 Cursor 用量:</span>
-                <span>{importData.showCursorUsage ? "✓" : "✗"}</span>
+                <span className="text-muted-foreground">Cursor 显示:</span>
+                <span>{importData.cursorSettings.showUsage ? "✓" : "✗"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">书签数量:</span>
-                <span>{importData.bookmarks.length} 个</span>
+                <span>{importData.bookmarks.items.length} 个</span>
               </div>
             </div>
           )}
