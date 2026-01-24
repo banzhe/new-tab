@@ -2,6 +2,7 @@ import { useRequest } from "ahooks"
 import { useEffect } from "react"
 import { onMessage, sendMessage } from "webext-bridge/content-script"
 import { Progress } from "@/components/ui/progress"
+import { fillDefaults } from "@/lib/utils"
 import { SmallCard } from "./SmallCard"
 
 function formatTime(ms: number): string {
@@ -21,6 +22,10 @@ function formatTime(ms: number): string {
     return `${minutes}分钟${seconds % 60}秒后重置`
   }
   return `${seconds}秒后重置`
+}
+
+const defaultValue = {
+  model_remains: [],
 }
 
 interface ModelRemain {
@@ -68,7 +73,7 @@ export function MiniMaxUsage() {
   const externalLink = "https://www.minimaxi.com"
 
   const {
-    data: remainsData = { model_remains: [] },
+    data: remainsData = { ...defaultValue },
     loading,
     error,
     refresh: fetchRemains,
@@ -81,7 +86,7 @@ export function MiniMaxUsage() {
       )
 
       if (response.success && response.data) {
-        return response.data
+        return fillDefaults(response.data, defaultValue)
       }
 
       throw new Error(response.error || "获取数据失败")
@@ -116,7 +121,7 @@ export function MiniMaxUsage() {
         {remainsData.model_remains.length === 0 ? (
           <p className="text-muted-foreground text-center">暂无用量数据</p>
         ) : (
-          remainsData.model_remains.map((model) => (
+          remainsData.model_remains.map((model: ModelRemain) => (
             <ModelRemainCard key={model.model_name} model={model} />
           ))
         )}

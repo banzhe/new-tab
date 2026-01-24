@@ -1,6 +1,7 @@
 import { useRequest } from "ahooks"
 import { useEffect } from "react"
 import { onMessage, sendMessage } from "webext-bridge/content-script"
+import { fillDefaults } from "@/lib/utils"
 import { SmallCard } from "./SmallCard"
 
 // 格式化 token 数量
@@ -22,18 +23,20 @@ function formatCost(cents?: number): string {
   return `$${(cents / 100).toFixed(2)}`
 }
 
+const defaultValue = {
+  aggregations: [],
+  totalInputTokens: "0",
+  totalOutputTokens: "0",
+  totalCacheWriteTokens: "0",
+  totalCacheReadTokens: "0",
+  totalCostCents: 0,
+}
+
 export function CursorUsage() {
   const cardTitle = "Cursor 每月用量"
   const externalLink = "https://cursor.com/home"
   const {
-    data: usageData = {
-      aggregations: [],
-      totalInputTokens: "0",
-      totalOutputTokens: "0",
-      totalCacheWriteTokens: "0",
-      totalCacheReadTokens: "0",
-      totalCostCents: 0,
-    },
+    data: usageData = { ...defaultValue },
     loading,
     error,
     refresh: fetchUsage,
@@ -42,7 +45,7 @@ export function CursorUsage() {
       const response = await sendMessage("fetchCursorUsage", null, "background")
 
       if (response.success && response.data) {
-        return response.data
+        return fillDefaults(response.data, defaultValue)
       }
 
       throw new Error(response.error || "获取数据失败")

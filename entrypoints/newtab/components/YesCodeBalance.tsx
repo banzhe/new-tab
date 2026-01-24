@@ -2,21 +2,24 @@ import { useRequest } from "ahooks"
 import { useEffect } from "react"
 import { onMessage, sendMessage } from "webext-bridge/content-script"
 import { Progress } from "@/components/ui/progress"
+import { fillDefaults } from "@/lib/utils"
 import { SmallCard } from "./SmallCard"
+
+const defaultValue = {
+  subscription_balance: 0,
+  weekly_spent_balance: 0,
+  weekly_limit: 0,
+  total_balance: 0,
+  pay_as_you_go_balance: 0,
+  balance: 0,
+}
 
 export function YesCodeBalance() {
   const cardTitle = "YesCode 余额统计"
   const externalLink = "https://co.yes.vg/dashboard"
   // Fetch balance using useRequest
   const {
-    data: balanceData = {
-      subscription_balance: 0,
-      weekly_spent_balance: 0,
-      weekly_limit: 0,
-      total_balance: 0,
-      pay_as_you_go_balance: 0,
-      balance: 0,
-    },
+    data: balanceData = { ...defaultValue },
     loading,
     error,
     refresh: fetchBalance,
@@ -25,7 +28,7 @@ export function YesCodeBalance() {
       const response = await sendMessage("fetchBalance", null, "background")
 
       if (response.success && response.data) {
-        return response.data
+        return fillDefaults(response.data, defaultValue)
       }
 
       throw new Error(response.error || "获取数据失败")
