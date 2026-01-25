@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/drawer"
 import { Separator } from "@/components/ui/separator"
 import type { Bookmark } from "@/types/messages"
+import { MessageType } from "@/types/messages"
 import { BookmarkSettings } from "./BookmarkSettings"
 import { ConfigImportExport } from "./ConfigImportExport"
 import { CursorSettings } from "./CursorSettings"
@@ -40,7 +41,11 @@ export function SettingsDrawer() {
 
   const { refresh: reloadConfig, loading: loadingConfig } = useRequest(
     async () => {
-      const response = await sendMessage("getAppConfig", null, "background")
+      const response = await sendMessage(
+        MessageType.GET_APP_CONFIG,
+        null,
+        "background",
+      )
 
       if (response.success && response.data) {
         const config = response.data
@@ -64,7 +69,7 @@ export function SettingsDrawer() {
   const { loading: saving, run: saveConfig } = useRequest(
     async () => {
       const response = await sendMessage(
-        "saveAppConfig",
+        MessageType.SAVE_APP_CONFIG,
         {
           yesCode: { showUsage: showYesCodeUsage },
           cursorSettings: { showUsage: showCursorUsage },

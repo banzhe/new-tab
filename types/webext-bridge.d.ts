@@ -9,15 +9,18 @@ import type {
 
 declare module "webext-bridge" {
   export interface ProtocolMap {
-    getAppConfig: ProtocolWithReturn<null, MessageResponse<AppConfig>>
-    saveAppConfig: ProtocolWithReturn<Partial<AppConfig>, MessageResponse>
-    appConfigUpdated: null
+    GET_APP_CONFIG: ProtocolWithReturn<null, MessageResponse<AppConfig>>
+    SAVE_APP_CONFIG: ProtocolWithReturn<Partial<AppConfig>, MessageResponse>
+    APP_CONFIG_UPDATED: null
 
-    fetchBalance: ProtocolWithReturn<null, MessageResponse<YesCodeBalanceData>>
+    FETCH_BALANCE: ProtocolWithReturn<null, MessageResponse<YesCodeBalanceData>>
 
-    fetchCursorUsage: ProtocolWithReturn<null, MessageResponse<CursorUsageData>>
+    FETCH_CURSOR_USAGE: ProtocolWithReturn<
+      null,
+      MessageResponse<CursorUsageData>
+    >
 
-    fetchMiniMaxRemains: ProtocolWithReturn<
+    FETCH_MINIMAX_REMAINS: ProtocolWithReturn<
       null,
       MessageResponse<MiniMaxRemainsData>
     >

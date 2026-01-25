@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { onMessage, sendMessage } from "webext-bridge/options"
-import type { Bookmark } from "@/types/messages"
+import { type Bookmark, MessageType } from "@/types/messages"
 import { BookmarkGrid } from "./components/BookmarkGrid"
 import { CursorUsage } from "./components/CursorUsage"
 import { MiniMaxUsage } from "./components/MiniMaxUsage"
@@ -15,7 +15,7 @@ function App() {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
 
   useEffect(() => {
-    sendMessage("getAppConfig", null, "background")
+    sendMessage(MessageType.GET_APP_CONFIG, null, "background")
       .then((response) => {
         if (response.success && response.data) {
           setShowYesCodeUsage(response.data.yesCode.showUsage)
@@ -28,8 +28,8 @@ function App() {
         console.error("Failed to load config:", error)
       })
 
-    onMessage("appConfigUpdated", () => {
-      sendMessage("getAppConfig", null, "background")
+    onMessage(MessageType.APP_CONFIG_UPDATED, () => {
+      sendMessage(MessageType.GET_APP_CONFIG, null, "background")
         .then((response) => {
           if (response.success && response.data) {
             setShowYesCodeUsage(response.data.yesCode.showUsage)

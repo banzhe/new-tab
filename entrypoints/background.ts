@@ -4,6 +4,8 @@ import {
   fetchYesCodeBalance,
 } from "@/lib/api"
 import { getAppConfig, saveAppConfig } from "@/lib/storage"
+import type { AppConfig } from "@/types/messages"
+import { MessageType } from "@/types/messages"
 
 import "webext-bridge/background"
 import { onMessage, sendMessage } from "webext-bridge/background"
@@ -21,19 +23,22 @@ export default defineBackground(() => {
     }
   })()
 
-  onMessage("getAppConfig", async () => {
+  onMessage(MessageType.GET_APP_CONFIG, async () => {
     const config = await getAppConfig()
     return { success: true, data: config }
   })
 
-  onMessage("saveAppConfig", async ({ data }) => {
-    await saveAppConfig(data)
-    await sendMessage("appConfigUpdated", null, "options")
-    await initializeCookieTimers()
-    return { success: true }
-  })
+  onMessage(
+    MessageType.SAVE_APP_CONFIG,
+    async ({ data }: { data?: Partial<AppConfig> }) => {
+      await saveAppConfig(data ?? {})
+      await sendMessage(MessageType.APP_CONFIG_UPDATED, null, "options")
+      await initializeCookieTimers()
+      return { success: true }
+    },
+  )
 
-  onMessage("fetchBalance", async () => {
+  onMessage(MessageType.FETCH_BALANCE, async () => {
     const cookies = await browser.cookies.getAll({
       domain: "yes.vg",
     })
@@ -51,7 +56,7 @@ export default defineBackground(() => {
     return { success: true, data: balanceData }
   })
 
-  onMessage("fetchCursorUsage", async () => {
+  onMessage(MessageType.FETCH_CURSOR_USAGE, async () => {
     const cookies = await browser.cookies.getAll({
       domain: "cursor.com",
     })
@@ -69,7 +74,7 @@ export default defineBackground(() => {
     return { success: true, data: usageData }
   })
 
-  onMessage("fetchMiniMaxRemains", async () => {
+  onMessage(MessageType.FETCH_MINIMAX_REMAINS, async () => {
     const config = await getAppConfig()
 
     if (!config.miniMax.apiKey) {

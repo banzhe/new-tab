@@ -31,7 +31,7 @@ search, and API usage tracking.
 **Communication Flow:** The new tab page and background script communicate via
 `webext-bridge`:
 
-- Messages are defined in `types/messages.ts`
+- Messages are defined in `types/messages.ts` using `MessageType` enum
 - Background handles API calls, cookie management, and timers
 - Frontend sends requests and receives updates through the bridge
 
@@ -43,6 +43,25 @@ search, and API usage tracking.
   `"webext-bridge/background"` import
 - **Content script modules** (`entrypoints/content/*`): Use
   `"webext-bridge/content-script"` import
+
+**Message Communication Pattern:**
+
+All message keys use `MessageType` enum from `@/types/messages`:
+
+```typescript
+import { MessageType } from "@/types/messages"
+
+// Send
+sendMessage(MessageType.GET_APP_CONFIG, null, "background")
+sendMessage(MessageType.SAVE_APP_CONFIG, payload, "background")
+
+// Receive
+onMessage(MessageType.GET_APP_CONFIG, async () => { ... })
+onMessage(MessageType.APP_CONFIG_UPDATED, () => { ... })
+```
+
+**Type Hints:** `types/webext-bridge.d.ts` extends `ProtocolMap` with type-safe
+definitions for all message types.
 
 **Key Components:**
 

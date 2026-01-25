@@ -3,6 +3,7 @@ import { useEffect } from "react"
 import { onMessage, sendMessage } from "webext-bridge/content-script"
 import { Progress } from "@/components/ui/progress"
 import { fillDefaults } from "@/lib/utils"
+import { MessageType } from "@/types/messages"
 import { SmallCard } from "./SmallCard"
 
 const defaultValue = {
@@ -25,7 +26,11 @@ export function YesCodeBalance() {
     refresh: fetchBalance,
   } = useRequest(
     async () => {
-      const response = await sendMessage("fetchBalance", null, "background")
+      const response = await sendMessage(
+        MessageType.FETCH_BALANCE,
+        null,
+        "background",
+      )
 
       if (response.success && response.data) {
         return fillDefaults(response.data, defaultValue)
@@ -42,7 +47,7 @@ export function YesCodeBalance() {
 
   useEffect(() => {
     // Listen for config updates from background script
-    onMessage("configUpdated", () => {
+    onMessage(MessageType.APP_CONFIG_UPDATED, () => {
       fetchBalance()
     })
   }, [fetchBalance])

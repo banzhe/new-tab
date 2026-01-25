@@ -2,6 +2,7 @@ import { useRequest } from "ahooks"
 import { useEffect } from "react"
 import { onMessage, sendMessage } from "webext-bridge/content-script"
 import { fillDefaults } from "@/lib/utils"
+import { MessageType } from "@/types/messages"
 import { SmallCard } from "./SmallCard"
 
 // 格式化 token 数量
@@ -42,7 +43,11 @@ export function CursorUsage() {
     refresh: fetchUsage,
   } = useRequest(
     async () => {
-      const response = await sendMessage("fetchCursorUsage", null, "background")
+      const response = await sendMessage(
+        MessageType.FETCH_CURSOR_USAGE,
+        null,
+        "background",
+      )
 
       if (response.success && response.data) {
         return fillDefaults(response.data, defaultValue)
@@ -58,7 +63,7 @@ export function CursorUsage() {
   )
 
   useEffect(() => {
-    onMessage("configUpdated", () => {
+    onMessage(MessageType.APP_CONFIG_UPDATED, () => {
       fetchUsage()
     })
   }, [fetchUsage])

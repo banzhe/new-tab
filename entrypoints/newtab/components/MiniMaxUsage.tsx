@@ -3,6 +3,7 @@ import { useEffect } from "react"
 import { onMessage, sendMessage } from "webext-bridge/content-script"
 import { Progress } from "@/components/ui/progress"
 import { fillDefaults } from "@/lib/utils"
+import { MessageType } from "@/types/messages"
 import { SmallCard } from "./SmallCard"
 
 function formatTime(ms: number): string {
@@ -80,7 +81,7 @@ export function MiniMaxUsage() {
   } = useRequest(
     async () => {
       const response = await sendMessage(
-        "fetchMiniMaxRemains",
+        MessageType.FETCH_MINIMAX_REMAINS,
         null,
         "background",
       )
@@ -100,7 +101,7 @@ export function MiniMaxUsage() {
 
   useEffect(() => {
     // 监听配置更新
-    onMessage("configUpdated", () => {
+    onMessage(MessageType.APP_CONFIG_UPDATED, () => {
       fetchRemains()
     })
   }, [fetchRemains])
