@@ -4,6 +4,7 @@ import { type Bookmark, MessageType } from "@/types/messages"
 import { BookmarkGrid } from "./components/BookmarkGrid"
 import { CursorUsage } from "./components/CursorUsage"
 import { MiniMaxUsage } from "./components/MiniMaxUsage"
+import { PackyCodexUsage } from "./components/PackyCodexUsage"
 import { SearchBar } from "./components/SearchBar"
 import { SettingsDrawer } from "./components/SettingsDrawer"
 import { YesCodeBalance } from "./components/YesCodeBalance"
@@ -12,6 +13,7 @@ function App() {
   const [showYesCodeUsage, setShowYesCodeUsage] = useState(false)
   const [showCursorUsage, setShowCursorUsage] = useState(false)
   const [showMiniMaxUsage, setShowMiniMaxUsage] = useState(false)
+  const [showPackyCodexUsage, setShowPackyCodexUsage] = useState(false)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
 
   useEffect(() => {
@@ -22,6 +24,7 @@ function App() {
           setShowCursorUsage(response.data.cursorSettings.showUsage)
           setBookmarks(response.data.bookmarks.items || [])
           setShowMiniMaxUsage(response.data.miniMax.showUsage)
+          setShowPackyCodexUsage(response.data.packyCodex.showUsage)
         }
       })
       .catch((error) => {
@@ -36,6 +39,7 @@ function App() {
             setShowCursorUsage(response.data.cursorSettings.showUsage)
             setBookmarks(response.data.bookmarks.items || [])
             setShowMiniMaxUsage(response.data.miniMax.showUsage)
+            setShowPackyCodexUsage(response.data.packyCodex.showUsage)
           }
         })
         .catch((error) => {
@@ -65,6 +69,8 @@ function App() {
             {showCursorUsage && <CursorUsage />}
 
             {showMiniMaxUsage && <MiniMaxUsage />}
+
+            {showPackyCodexUsage && <PackyCodexUsage />}
           </div>
         </div>
       </div>

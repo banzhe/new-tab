@@ -156,6 +156,10 @@ export function ConfigImportExport({
                 <span>{importData.cursorSettings.showUsage ? "✓" : "✗"}</span>
               </div>
               <div className="flex justify-between">
+                <span className="text-muted-foreground">PackyCodex 显示:</span>
+                <span>{importData.packyCodex.showUsage ? "✓" : "✗"}</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-muted-foreground">书签数量:</span>
                 <span>{importData.bookmarks.items.length} 个</span>
               </div>

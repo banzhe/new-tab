@@ -32,9 +32,14 @@ export interface MiniMaxConfig {
   showUsage: boolean
 }
 
+export interface PackyCodexConfig {
+  showUsage: boolean
+}
+
 export interface AppConfig {
   yesCode: YesCodeConfig
   cursorSettings: CursorSettingsConfig
+  packyCodex: PackyCodexConfig
   bookmarks: BookmarkConfig
   sendCookie: SendCookieConfig
   miniMax: MiniMaxConfig
@@ -80,6 +85,15 @@ export interface MiniMaxRemainsData {
   model_remains: ModelRemain[]
 }
 
+export interface PackyCodexUserInfo {
+  daily_budget_usd: string
+  daily_spent_usd: string
+  weekly_budget_usd: string
+  weekly_spent_usd: string
+  weekly_window_end: string
+  weekly_window_start?: string
+}
+
 export enum MessageType {
   GET_APP_CONFIG = "GET_APP_CONFIG",
   SAVE_APP_CONFIG = "SAVE_APP_CONFIG",
@@ -87,6 +101,7 @@ export enum MessageType {
   FETCH_BALANCE = "FETCH_BALANCE",
   FETCH_CURSOR_USAGE = "FETCH_CURSOR_USAGE",
   FETCH_MINIMAX_REMAINS = "FETCH_MINIMAX_REMAINS",
+  FETCH_PACKYCODEX_USER_INFO = "FETCH_PACKYCODEX_USER_INFO",
 }
 
 export interface BaseMessage {
@@ -118,6 +133,10 @@ export interface FetchMiniMaxRemainsMessage extends BaseMessage {
   type: MessageType.FETCH_MINIMAX_REMAINS
 }
 
+export interface FetchPackyCodexUserInfoMessage extends BaseMessage {
+  type: MessageType.FETCH_PACKYCODEX_USER_INFO
+}
+
 export interface MessageResponse<T = unknown> {
   success: boolean
   data?: T
@@ -128,6 +147,7 @@ export type AppConfigResponse = MessageResponse<AppConfig>
 export type BalanceResponse = MessageResponse<YesCodeBalanceData>
 export type CursorUsageResponse = MessageResponse<CursorUsageData>
 export type MiniMaxRemainsResponse = MessageResponse<MiniMaxRemainsData>
+export type PackyCodexUserInfoResponse = MessageResponse<PackyCodexUserInfo>
 
 export type ExtensionMessage =
   | GetAppConfigMessage
@@ -136,3 +156,4 @@ export type ExtensionMessage =
   | FetchBalanceMessage
   | FetchCursorUsageMessage
   | FetchMiniMaxRemainsMessage
+  | FetchPackyCodexUserInfoMessage

@@ -65,6 +65,14 @@ export function validateConfig(data: unknown): ValidationResult {
     return { valid: false, error: "cursorSettings.showUsage 必须是布尔值" }
   }
 
+  let packyCodexShowUsage = false
+  if (config.packyCodex && typeof config.packyCodex === "object") {
+    const packyCodex = config.packyCodex as Record<string, unknown>
+    if (typeof packyCodex.showUsage === "boolean") {
+      packyCodexShowUsage = packyCodex.showUsage
+    }
+  }
+
   const bookmarks = config.bookmarks as Record<string, unknown>
   if (!bookmarks || typeof bookmarks !== "object") {
     return { valid: false, error: "bookmarks 格式错误" }
@@ -83,6 +91,7 @@ export function validateConfig(data: unknown): ValidationResult {
   const sanitized: AppConfig = {
     yesCode: { showUsage: Boolean(yesCode.showUsage) },
     cursorSettings: { showUsage: Boolean(cursorSettings.showUsage) },
+    packyCodex: { showUsage: packyCodexShowUsage },
     bookmarks: { items: bookmarks.items.map(sanitizeBookmark) },
     sendCookie: [],
     miniMax: { apiKey: "", showUsage: false },

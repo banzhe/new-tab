@@ -19,6 +19,7 @@ import { BookmarkSettings } from "./BookmarkSettings"
 import { ConfigImportExport } from "./ConfigImportExport"
 import { CursorSettings } from "./CursorSettings"
 import { MiniMaxSettings } from "./MiniMaxSettings"
+import { PackyCodexSettings } from "./PackyCodexSettings"
 import { SendCookieSettings } from "./SendCookieSettings"
 import { YesCodeSettings } from "./YesCodeSettings"
 
@@ -26,6 +27,7 @@ export function SettingsDrawer() {
   const [open, setOpen] = useState(false)
   const [showYesCodeUsage, setShowYesCodeUsage] = useState(false)
   const [showCursorUsage, setShowCursorUsage] = useState(false)
+  const [showPackyCodexUsage, setShowPackyCodexUsage] = useState(false)
   const [miniMaxApiKey, setMiniMaxApiKey] = useState("")
   const [showMiniMaxUsage, setShowMiniMaxUsage] = useState(false)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
@@ -51,6 +53,7 @@ export function SettingsDrawer() {
         const config = response.data
         setShowYesCodeUsage(config.yesCode.showUsage)
         setShowCursorUsage(config.cursorSettings.showUsage)
+        setShowPackyCodexUsage(config.packyCodex.showUsage)
         setBookmarks(config.bookmarks.items || [])
         setMiniMaxApiKey(config.miniMax.apiKey)
         setShowMiniMaxUsage(config.miniMax.showUsage)
@@ -73,6 +76,7 @@ export function SettingsDrawer() {
         {
           yesCode: { showUsage: showYesCodeUsage },
           cursorSettings: { showUsage: showCursorUsage },
+          packyCodex: { showUsage: showPackyCodexUsage },
           bookmarks: { items: bookmarks },
           sendCookie: sendCookieConfigs,
           miniMax: {
@@ -132,6 +136,11 @@ export function SettingsDrawer() {
             onShowUsageChange={setShowCursorUsage}
           />
 
+          <PackyCodexSettings
+            showUsage={showPackyCodexUsage}
+            onShowUsageChange={setShowPackyCodexUsage}
+          />
+
           <MiniMaxSettings
             apiKey={miniMaxApiKey}
             showUsage={showMiniMaxUsage}
@@ -153,6 +162,7 @@ export function SettingsDrawer() {
             currentConfig={{
               yesCode: { showUsage: showYesCodeUsage },
               cursorSettings: { showUsage: showCursorUsage },
+              packyCodex: { showUsage: showPackyCodexUsage },
               bookmarks: { items: bookmarks },
               sendCookie: sendCookieConfigs,
               miniMax: {
@@ -163,6 +173,7 @@ export function SettingsDrawer() {
             onImport={(config) => {
               setShowYesCodeUsage(config.yesCode.showUsage)
               setShowCursorUsage(config.cursorSettings.showUsage)
+              setShowPackyCodexUsage(config.packyCodex.showUsage)
               setBookmarks(config.bookmarks.items)
             }}
           />

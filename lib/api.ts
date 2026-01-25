@@ -1,6 +1,7 @@
 import type {
   CursorUsageData,
   MiniMaxRemainsData,
+  PackyCodexUserInfo,
   YesCodeBalanceData,
 } from "@/types/messages"
 
@@ -103,4 +104,58 @@ export async function fetchMiniMaxRemains(
 
   const data = await response.json()
   return data as MiniMaxRemainsData
+}
+
+/**
+ * HTTP 错误类型，包含状态码和错误信息
+ */
+export class HttpError extends Error {
+  status: number
+  message: string
+
+  constructor(status: number, message: string) {
+    super(message)
+    this.status = status
+    this.message = message
+    this.name = "HttpError"
+  }
+}
+
+// PackyCodex API 配置
+const PACKYCODEX_USER_INFO_API_URL =
+  "https://codex.packycode.com/api/backend/users/info"
+
+/**
+ * 获取 PackyCodex 用户信息
+ * @param token Bearer token
+ * @param cookie 认证 cookie（附加传递）
+ * @returns 用户信息数据
+ * @throws 当 token 为空时抛出 Error
+ * @throws 当请求失败时抛出 HttpError（包含 status 和 message）
+ */
+export async function fetchPackyCodexUserInfo(
+  token: string,
+  _cookie: string,
+): Promise<PackyCodexUserInfo> {
+  if (!token) {
+    throw new Error("Token 不能为空")
+  }
+
+  const response = await fetch(PACKYCODEX_USER_INFO_API_URL, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  })
+
+  if (!response.ok) {
+    throw new HttpError(
+      response.status,
+      `请求失败: ${response.status} ${response.statusText}`,
+    )
+  }
+
+  const data = await response.json()
+  return data as PackyCodexUserInfo
 }

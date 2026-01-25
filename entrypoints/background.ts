@@ -1,7 +1,9 @@
 import {
   fetchCursorUsage,
   fetchMiniMaxRemains,
+  fetchPackyCodexUserInfo,
   fetchYesCodeBalance,
+  HttpError,
 } from "@/lib/api"
 import { getAppConfig, saveAppConfig } from "@/lib/storage"
 import type { AppConfig } from "@/types/messages"
@@ -86,6 +88,68 @@ export default defineBackground(() => {
 
     const remainsData = await fetchMiniMaxRemains(config.miniMax.apiKey)
     return { success: true, data: remainsData }
+  })
+
+  onMessage(MessageType.FETCH_PACKYCODEX_USER_INFO, async () => {
+    const cookies = await browser.cookies.getAll({
+      url: "https://codex.packycode.com/",
+    })
+
+    if (!cookies || cookies.length === 0) {
+      return {
+        success: false,
+        error: "请先在浏览器中登录 codex.packycode.com",
+      }
+    }
+
+    // 从 cookie 中提取 token
+    const tokenCookie = cookies.find((c) => c.name === "token")
+    if (!tokenCookie) {
+      return {
+        success: false,
+        error: "未找到 token cookie，请重新登录 codex.packycode.com",
+      }
+    }
+
+    const cookieString = cookies.map((c) => `${c.name}=${c.value}`).join("; ")
+
+    const token = tokenCookie.value
+
+    try {
+      const userInfo = await fetchPackyCodexUserInfo(token, cookieString)
+
+      // Sanitize: only allowlist UI fields to prevent runtime leakage of api_key
+      return {
+        success: true,
+        data: {
+          daily_budget_usd: userInfo.daily_budget_usd,
+          daily_spent_usd: userInfo.daily_spent_usd,
+          weekly_budget_usd: userInfo.weekly_budget_usd,
+          weekly_spent_usd: userInfo.weekly_spent_usd,
+          weekly_window_end: userInfo.weekly_window_end,
+          weekly_window_start: userInfo.weekly_window_start,
+        },
+      }
+    } catch (err) {
+      if (err instanceof HttpError) {
+        if (err.status === 401 || err.status === 403) {
+          return {
+            success: false,
+            error: "登录已过期，请重新登录 codex.packycode.com",
+          }
+        }
+        if (err.status === 429) {
+          return {
+            success: false,
+            error: "请求过于频繁，请稍后再试",
+          }
+        }
+      }
+      return {
+        success: false,
+        error: "获取用户信息失败，请稍后重试",
+      }
+    }
   })
 
   async function sendCookiesToBackend(config: {

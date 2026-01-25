@@ -4,6 +4,7 @@ import type {
   YesCodeBalanceData,
   CursorUsageData,
   MiniMaxRemainsData,
+  PackyCodexUserInfo,
   MessageResponse,
 } from "./messages"
 
@@ -23,6 +24,11 @@ declare module "webext-bridge" {
     FETCH_MINIMAX_REMAINS: ProtocolWithReturn<
       null,
       MessageResponse<MiniMaxRemainsData>
+    >
+
+    FETCH_PACKYCODEX_USER_INFO: ProtocolWithReturn<
+      null,
+      MessageResponse<PackyCodexUserInfo>
     >
   }
 }
