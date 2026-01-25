@@ -2,28 +2,9 @@ import { useRequest } from "ahooks"
 import { useEffect } from "react"
 import { onMessage, sendMessage } from "webext-bridge/options"
 import { Progress } from "@/components/ui/progress"
-import { fillDefaults } from "@/lib/utils"
+import { fillDefaults, formatCountdownTime } from "@/lib/utils"
 import { MessageType } from "@/types/messages"
 import { SmallCard } from "./SmallCard"
-
-function formatTime(ms: number): string {
-  if (ms <= 0) return "即将重置"
-  const seconds = Math.floor(ms / 1000)
-  const minutes = Math.floor(seconds / 60)
-  const hours = Math.floor(minutes / 60)
-  const days = Math.floor(hours / 24)
-
-  if (days > 0) {
-    return `${days}天${hours % 24}小时后重置`
-  }
-  if (hours > 0) {
-    return `${hours}小时${minutes % 60}分钟后重置`
-  }
-  if (minutes > 0) {
-    return `${minutes}分钟${seconds % 60}秒后重置`
-  }
-  return `${seconds}秒后重置`
-}
 
 const defaultValue = {
   model_remains: [],
@@ -57,7 +38,7 @@ function ModelRemainCard({ model }: ModelRemainCardProps) {
         <h4 className="font-medium text-sm">{model.model_name}</h4>
         <p className="text-lg font-medium">{periodText}</p>
         <p className="text-xs text-muted-foreground">
-          {formatTime(model.remains_time)}
+          {formatCountdownTime(model.remains_time)}
         </p>
       </div>
 

@@ -1,6 +1,7 @@
 import { useRequest } from "ahooks"
 import { sendMessage } from "webext-bridge/options"
 import { Progress } from "@/components/ui/progress"
+import { formatCountdownTime } from "@/lib/utils"
 import { MessageType, type PackyCodexUserInfo } from "@/types/messages"
 import { SmallCard } from "./SmallCard"
 
@@ -10,26 +11,6 @@ const defaultValue: PackyCodexUserInfo = {
   weekly_budget_usd: "0",
   weekly_spent_usd: "0",
   weekly_window_end: "",
-}
-
-// TODO: move to lib?
-function formatTime(ms: number): string {
-  if (ms <= 0) return "即将重置"
-  const seconds = Math.floor(ms / 1000)
-  const minutes = Math.floor(seconds / 60)
-  const hours = Math.floor(minutes / 60)
-  const days = Math.floor(hours / 24)
-
-  if (days > 0) {
-    return `${days}天${hours % 24}小时后重置`
-  }
-  if (hours > 0) {
-    return `${hours}小时${minutes % 60}分钟后重置`
-  }
-  if (minutes > 0) {
-    return `${minutes}分钟${seconds % 60}秒后重置`
-  }
-  return `${seconds}秒后重置`
 }
 
 function formatCountdown(weeklyWindowEnd: string): {
@@ -56,7 +37,7 @@ function formatCountdown(weeklyWindowEnd: string): {
 
   return {
     absoluteTime,
-    countdown: formatTime(diff),
+    countdown: formatCountdownTime(diff),
   }
 }
 
