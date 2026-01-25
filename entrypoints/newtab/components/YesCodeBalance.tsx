@@ -1,6 +1,6 @@
 import { useRequest } from "ahooks"
 import { useEffect } from "react"
-import { onMessage, sendMessage } from "webext-bridge/content-script"
+import { onMessage, sendMessage } from "webext-bridge/options"
 import { Progress } from "@/components/ui/progress"
 import { fillDefaults } from "@/lib/utils"
 import { MessageType } from "@/types/messages"
